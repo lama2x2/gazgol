@@ -1,0 +1,1196 @@
+<title>Основы Go — конспект</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Лист за листом, как в PDF-конспекте: серая шапка с номером, рамка с темой, блоки с понятиями. Одна тёмная тема — осознанно. */
+:root {
+  --ink: #0f0f10;        /* фон страницы */
+  --sheet: #000;         /* фон листа */
+  --rule: #e9e9e9;       /* белые рамки */
+  --cap: #9a9a9a;        /* серая шапка листа */
+  --text: #f2f2f2;
+  --mute: #a3a3a3;
+  --go: #00add8;         /* цвет гофера: ключевые слова, акценты */
+  --str: #9fd39a;        /* строки в коде */
+  --num: #6ec3c9;        /* числа в коде */
+  --com: #7b7b7b;        /* комментарии */
+  --ok: #7ad48b;
+  --py: #f2c94c;         /* блоки «как в Python» */
+  --display: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ink); color: var(--text); font-family: var(--display); font-weight: 500; line-height: 1.45; padding-inline: 16px; padding-block: 0 64px; }
+a { color: var(--go); }
+.wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+
+/* обложка */
+.cover { min-height: 340px; display: grid; place-items: center; text-align: center; padding-block: 48px 8px; }
+.cover-frame { border: 18px solid var(--cap); border-radius: 36px; padding: 6px; box-shadow: 0 0 40px rgba(255,255,255,.12); }
+.cover-inner { background: var(--sheet); border-radius: 20px; padding: 28px 44px; }
+.cover h1 { margin: 0; font-weight: 900; font-size: clamp(34px, 8vw, 58px); letter-spacing: .02em; text-transform: uppercase; line-height: 1; }
+.cover p { margin: 18px 0 0; color: var(--mute); font-size: 15px; max-width: 44ch; }
+
+/* оглавление */
+nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--ink); padding-block: 10px; border-bottom: 1px solid #262626; display: flex; gap: 8px; flex-wrap: wrap; }
+nav.toc a { text-decoration: none; color: var(--text); border: 1.5px solid var(--rule); border-radius: 8px; padding: 5px 10px; font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--text); color: var(--sheet); outline: none; }
+nav.toc .prog { margin-left: auto; color: var(--mute); font-size: 13px; align-self: center; }
+
+/* разделитель раздела */
+.part { display: flex; align-items: baseline; gap: 14px; padding-top: 24px; }
+.part b { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--go); }
+.part h2 { margin: 0; font-weight: 900; font-size: clamp(22px, 5vw, 30px); text-wrap: balance; }
+
+/* лист */
+.sheet { counter-increment: sheet; background: var(--sheet); border-radius: 4px; overflow: hidden; scroll-margin-top: 64px; }
+.sheet-cap { background: var(--cap); height: 44px; display: flex; justify-content: flex-end; align-items: center; padding-inline: 16px; }
+.sheet-cap::after { content: counter(sheet); background: var(--sheet); color: var(--text); border-radius: 7px; padding: 1px 16px; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.sheet-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.topic { border: 2px solid var(--rule); padding: 8px 12px; text-align: center; font-weight: 800; font-size: clamp(16px, 3.6vw, 20px); text-wrap: balance; line-height: 1.25; }
+.box { border: 2px solid var(--rule); padding: 12px 14px; min-width: 0; }
+.box > h3 { margin: 0 0 10px; font-size: 17px; font-weight: 800; }
+.box p { margin: 0 0 10px; max-width: 68ch; }
+.box p:last-child, .box ul:last-child, .box pre:last-child { margin-bottom: 0; }
+.box ul { margin: 0 0 10px; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.box li::before { content: "•"; margin-right: 6px; }
+code, pre, textarea { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+code { font-family: var(--mono); font-size: .9em; color: var(--go); }
+pre { margin: 0 0 10px; background: #111; border-left: 3px solid #333; padding: 10px 12px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.55; color: var(--text); }
+pre code { color: inherit; font-size: inherit; }
+.k { color: var(--go); } .s { color: var(--str); } .n { color: var(--num); } .c { color: var(--com); font-style: italic; }
+
+/* как в Python */
+.box.py { border-color: var(--py); border-style: dashed; }
+.box.py > h3 { color: var(--py); }
+.cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cmp > div { min-width: 0; }
+.cmp small { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); margin-bottom: 4px; }
+@media (max-width: 560px) { .cmp { grid-template-columns: 1fr; } }
+
+/* разбор и домашка */
+.box.solve > h3::before { content: "Разбор · "; color: var(--mute); font-weight: 700; }
+.hw { background: var(--text); color: var(--sheet); border: none; }
+.hw > h3 { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.hw .count { font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 700; }
+.hw .task { border-top: 1px solid #d0d0d0; padding: 6px 0; }
+.hw h3 + .task { border-top: none; }
+.hw label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.hw details { margin: 4px 0 2px 28px; font-size: 14px; }
+.hw summary { cursor: pointer; font-weight: 700; font-size: 13px; color: #444; width: fit-content; }
+.hw summary:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+.hw details p { margin: 6px 0 0; max-width: 64ch; }
+.hw details code { color: #0b5f78; font-weight: 600; }
+.hw input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: #111; flex: none; }
+.hw input:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+.hw label span { flex: 1; min-width: 0; }
+.hw label em { font-style: normal; font-family: var(--mono); font-size: 13px; font-weight: 600; }
+.hw label:has(input:checked) span { text-decoration: line-through; opacity: .55; }
+.hw .run { margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.hw .run code { background: var(--sheet); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; overflow-x: auto; max-width: 100%; }
+.hw button { font: inherit; font-size: 13px; font-weight: 700; border: 2px solid var(--sheet); background: transparent; border-radius: 6px; padding: 4px 10px; cursor: pointer; color: var(--sheet); }
+.hw button:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+
+.arrow { display: block; margin: 4px 0 0 auto; width: 120px; height: 70px; opacity: .85; }
+footer { color: var(--mute); font-size: 13px; text-align: center; padding-top: 16px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+/* редактор кода (работает при запуске через go run ./course/cmd/lyceum) */
+.hw button.primary { background: var(--sheet); color: var(--text); }
+.ed { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.ed textarea { width: 100%; min-height: 460px; resize: vertical; background: #0d0d0d; color: var(--text); caret-color: var(--go); font-family: var(--mono); font-size: 13.5px; line-height: 1.55; tab-size: 4; border: 2px solid var(--sheet); border-radius: 6px; padding: 10px 12px; white-space: pre; overflow: auto; }
+.ed textarea:focus-visible { outline: 2px solid var(--go); outline-offset: 1px; }
+.ed .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ed .status { font-size: 14px; font-weight: 800; }
+.ed .build { margin: 0; background: #2b1111; color: #ffc2c2; border-left-color: #a33; white-space: pre-wrap; font-size: 12.5px; }
+.ed .hint p { margin: 0 0 6px; }
+.ed kbd { font-family: var(--mono); font-size: 12px; border: 1px solid #999; border-radius: 4px; padding: 0 4px; }
+.task .fails { margin: 4px 0 0 28px; padding: 6px 8px; background: #fbe9e9; border-left: 3px solid #b3261e; font-family: var(--mono); font-size: 12.5px; color: #8a1c14; white-space: pre-wrap; overflow-x: auto; }
+.task.bad input { outline: 2px solid #b3261e; outline-offset: 1px; }
+.task .verdict { font-size: 12px; font-weight: 800; margin-left: 6px; text-decoration: none; display: inline-block; }
+.task.ok .verdict { color: #1d7a34; }
+.task.bad .verdict { color: #b3261e; }
+</style>
+
+<div class="wrap">
+
+<header class="cover">
+  <div>
+    <div class="cover-frame"><div class="cover-inner"><h1>Конспект</h1></div></div>
+    <p>Основы Go: 6 разделов, 12 уроков, 52 задачи с автопроверкой. Для тех, кто уже пишет на Python.</p>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Уроки">
+  <a href="#l11">1.1</a><a href="#l12">1.2</a><a href="#l21">2.1</a><a href="#l22">2.2</a>
+  <a href="#l31">3.1</a><a href="#l32">3.2</a><a href="#l41">4.1</a><a href="#l42">4.2</a>
+  <a href="#l51">5.1</a><a href="#l52">5.2</a><a href="#l61">6.1</a><a href="#l62">6.2</a>
+  <span class="prog" id="prog">0/52 задачи</span>
+</nav>
+
+<!-- ============ РАЗДЕЛ 1 ============ -->
+<div class="part"><b>Раздел 1</b><h2>Что такое Go и как он работает</h2></div>
+
+<section class="sheet" id="l11"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">1.1 Что такое Go. Первая программа</div>
+  <div class="box"><h3>Введение:</h3>
+    <p>Go — компилируемый язык со статической типизацией, его сделали в Google в 2009 году. Программа на Go сначала целиком переводится в машинный код (один исполняемый файл), а уже потом запускается. Поэтому многие ошибки ловятся до запуска, и программа работает быстро.</p>
+    <p>На Go пишут бэкенды, CLI-утилиты и инфраструктуру: Docker, Kubernetes, Terraform написаны на нём.</p>
+  </div>
+  <div class="box"><h3>Что необходимо для программирования на Go?</h3>
+    <ul>
+      <li>Go: <a href="https://go.dev/dl/" target="_blank" rel="noopener">go.dev/dl</a> (на маке — <code>brew install go</code>)</li>
+      <li>редактор: VS Code с расширением Go или GoLand</li>
+      <li>терминал — Go-разработчик живёт в нём</li>
+    </ul>
+    <p>Проверка установки: <code>go version</code></p>
+  </div>
+  <div class="box"><h3>Модуль — это проект:</h3>
+    <p>Любой проект на Go — это модуль. Его создаёт команда <code>go mod init имя</code>, она пишет файл <code>go.mod</code>. Это как <code>pyproject.toml</code>: имя проекта, версия Go и зависимости.</p>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">1.1 Что такое Go. Первая программа</div>
+  <div class="box"><h3>Первая программа:</h3>
+<pre><code><span class="k">package</span> main          <span class="c">// исполняемая программа всегда в пакете main</span>
+
+<span class="k">import</span> <span class="s">"fmt"</span>          <span class="c">// пакет для ввода-вывода</span>
+
+<span class="k">func</span> main() {           <span class="c">// точка входа, как if __name__ == "__main__"</span>
+    fmt.Println(<span class="s">"Привет, Go!"</span>)
+}</code></pre>
+    <ul>
+      <li><code>go run main.go</code> — скомпилировать и сразу запустить</li>
+      <li><code>go build</code> — собрать исполняемый файл</li>
+      <li><code>go fmt ./...</code> — отформатировать код (споров о стиле в Go нет)</li>
+    </ul>
+  </div>
+  <div class="box"><h3>Базовые функции пакета fmt:</h3>
+    <p><code>fmt.Println(a, b)</code>: выводит значения через пробел и переводит строку.<br>
+    <code>fmt.Printf("%s: %d\n", s, n)</code>: выводит по шаблону.<br>
+    <code>fmt.Sprintf(...)</code>: то же, но возвращает строку, а не печатает.</p>
+    <p>Главные «глаголы» шаблона: <code>%d</code> целое, <code>%s</code> строка, <code>%f</code> дробное (<code>%.1f</code> — с одним знаком после запятой), <code>%v</code> что угодно, <code>%q</code> строка в кавычках, <code>%02d</code> целое с ведущим нулём до 2 знаков.</p>
+  </div>
+  <div class="box py"><h3>Как это было в Python:</h3>
+    <div class="cmp">
+      <div><small>Python</small><pre><code>name = <span class="s">"Гоша"</span>
+print(<span class="s">f"Привет, {name}!"</span>)</code></pre></div>
+      <div><small>Go</small><pre><code>name := <span class="s">"Гоша"</span>
+fmt.Printf(<span class="s">"Привет, %s!\n"</span>, name)</code></pre></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">1.1 Что такое Go. Первая программа</div>
+  <div class="box"><h3>Функции: минимум для домашки:</h3>
+    <p>Каждая задача курса — это функция. Подробно функции разбираются в разделе 4, а пока хватит такого шаблона:</p>
+<pre><code><span class="k">func</span> PriceTag(title <span class="k">string</span>, price <span class="k">int</span>) <span class="k">string</span> {  <span class="c">// имя(параметры) тип_результата</span>
+    <span class="k">return</span> fmt.Sprintf(<span class="s">"%s: %d ₽"</span>, title, price)
+}</code></pre>
+    <ul>
+      <li>после имени параметра пишут его тип: <code>title string</code></li>
+      <li>тип результата пишут после скобок, а значение отдают через <code>return</code></li>
+      <li>строки склеиваются через <code>+</code>: <code>"Привет, " + name</code></li>
+      <li><code>\n</code> внутри строки означает перевод строки</li>
+      <li>арифметика как в Python: <code>+ - *</code> (подробно в 1.2)</li>
+    </ul>
+    <p>В файлах домашек вместо <code>package main</code> написано <code>package lesson11</code>: это не программа, а набор функций, которые вызывает проверка.</p>
+  </div>
+  <div class="box solve"><h3>как работают домашки</h3>
+    <p>Как в Яндекс Лицее: у каждой задачи есть условие и автоматическая проверка. Здесь проверка — это тесты Go. Задачи лежат в <code>course/lessonXX/tasks.go</code>: там написано условие и стоит заготовка функции с <code>// TODO</code>. Пишешь решение и запускаешь проверку.</p>
+<pre><code><span class="c">// было</span>
+<span class="k">func</span> Greeting(name <span class="k">string</span>) <span class="k">string</span> {
+    <span class="c">// TODO: твой код</span>
+    <span class="k">return</span> <span class="s">""</span>
+}</code></pre>
+<pre><code>./course/check.sh        <span class="c"># все уроки: ✅ 1.1: 3/3, ❌ 1.2: 2/5 …</span>
+./course/check.sh 11 -v  <span class="c"># один урок + что именно не так</span></code></pre>
+    <p>Файл <code>tasks_test.go</code> не трогай: это и есть проверяющая система.</p>
+  </div>
+  <div class="box hw" data-lesson="11"><h3>Домашка 1.1 <span class="count"></span></h3>
+    <div class="task" data-test="TestGreeting"><label><input type="checkbox" id="t11-1"><span><em>Greeting</em> — приветствие, «мир» по умолчанию</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Нужна строка из трёх кусков: <code>&quot;Привет, &quot;</code>, имя и <code>&quot;!&quot;</code>. Склей их через <code>+</code> или собери через <code>fmt.Sprintf(&quot;Привет, %s!&quot;, name)</code>.</p><p><b>Подвох.</b> Тест сравнивает строки посимвольно: пробел после запятой и восклицательный знак обязательны.</p></details></div>
+    <div class="task" data-test="TestPriceTag"><label><input type="checkbox" id="t11-2"><span><em>PriceTag</em> — ценник через fmt.Sprintf</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Шаблон <code>&quot;%s: %d ₽&quot;</code>: <code>%s</code> для названия, <code>%d</code> для цены. <code>fmt.Sprintf</code> возвращает готовую строку, её и верни через <code>return</code>.</p><p><b>Подвох.</b> <code>fmt.Println</code> здесь не подходит: он печатает на экран и ничего не возвращает.</p></details></div>
+    <div class="task" data-test="TestReceipt"><label><input type="checkbox" id="t11-3"><span><em>Receipt</em> — многострочный чек</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Один <code>fmt.Sprintf</code> с тремя строками в шаблоне, разделёнными <code>\n</code>. Итог посчитай прямо в аргументе: <code>qty*price</code>.</p><p><b>Подвох.</b> В конце не должно быть <code>\n</code>: шаблон заканчивается на <code>₽</code>.</p></details></div>
+    <div class="run"><code>./course/check.sh 11</code><button type="button">Копировать</button></div>
+  </div>
+</div></section>
+
+<section class="sheet" id="l12"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">1.2 Переменные и типы данных</div>
+  <div class="box"><h3>Переменные:</h3>
+    <p>В Go у каждой переменной есть тип, и поменять его нельзя. Объявить переменную можно тремя способами:</p>
+<pre><code><span class="k">var</span> price <span class="k">int</span> = <span class="n">5000</span>   <span class="c">// полностью</span>
+<span class="k">var</span> title = <span class="s">"Диван"</span>    <span class="c">// тип выведется сам: string</span>
+count := <span class="n">3</span>             <span class="c">// короткая форма, только внутри функций</span>
+
+<span class="k">var</span> sold <span class="k">bool</span>           <span class="c">// без значения → нулевое значение: false</span></code></pre>
+    <p><b>Нулевое значение.</b> Неинициализированных переменных в Go не бывает: <code>0</code> у чисел, <code>""</code> у строк, <code>false</code> у bool, <code>nil</code> у срезов, map и указателей.</p>
+    <p><b>Константы:</b> <code>const MaxPhotos = 10</code>. Изменить нельзя.</p>
+    <p><b>Несколько сразу:</b> <code>a, b := 1, 2</code>. Обмен значений — одной строкой: <code>a, b = b, a</code>.</p>
+  </div>
+  <div class="box"><h3>Типы данных:</h3>
+    <ul>
+      <li><code>int</code> — целые числа (а также int8…int64, uint)</li>
+      <li><code>float64</code> — дробные числа</li>
+      <li><code>string</code> — строка, неизменяемая</li>
+      <li><code>bool</code> — true / false</li>
+      <li><code>rune</code> — один символ Unicode (подробно в 3.2)</li>
+    </ul>
+    <p>Типы сами не смешиваются: <code>int + float64</code> — ошибка компиляции. Нужно явное приведение: <code>float64(n)</code>, <code>int(x)</code>.</p>
+  </div>
+  <div class="box"><h3>Арифметические операторы: + - * / %</h3>
+<pre><code>a := <span class="n">16</span> / <span class="n">3</span>        <span class="c">// 5 — у целых деление целочисленное, как // в Python</span>
+b := <span class="n">16</span> % <span class="n">3</span>        <span class="c">// 1 — остаток</span>
+c := <span class="n">16.0</span> / <span class="n">3</span>      <span class="c">// 5.333… — если хоть одно дробное</span>
+d := float64(a) / <span class="n">2</span> <span class="c">// 2.5</span>
+<span class="c">// оператора ** нет — есть math.Pow(2, 6)</span></code></pre>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">1.2 Коллекции: срезы и словари</div>
+  <div class="box"><h3>Срез (slice) — аналог списка:</h3>
+<pre><code>prices := []<span class="k">int</span>{<span class="n">100</span>, <span class="n">250</span>, <span class="n">700</span>}
+prices = append(prices, <span class="n">900</span>)  <span class="c">// добавить: append возвращает новый срез!</span>
+len(prices)                    <span class="c">// 4</span></code></pre>
+    <p>Все элементы среза одного типа: <code>[]int</code>, <code>[]string</code>.</p>
+    <p>Пустой срез: <code>[]int{}</code>. Срез нужной длины из нулей: <code>make([]int, 5)</code> → <code>[0 0 0 0 0]</code>.</p>
+  </div>
+  <div class="box"><h3>Индекс и срезы:</h3>
+    <p>Индекс — номер элемента слева направо, начиная с 0. Отрицательных индексов нет: последний элемент — <code>s[len(s)-1]</code>.</p>
+<pre><code>s := []<span class="k">int</span>{<span class="n">10</span>, <span class="n">20</span>, <span class="n">30</span>, <span class="n">40</span>}
+s[<span class="n">0</span>]     <span class="c">// 10</span>
+s[<span class="n">1</span>:<span class="n">3</span>]   <span class="c">// [20 30] — с 1 по 3, не включая 3</span>
+s[:<span class="n">2</span>]    <span class="c">// [10 20]</span>
+s[<span class="n">2</span>:]    <span class="c">// [30 40]</span>
+s[<span class="n">10</span>]    <span class="c">// panic: index out of range — как IndexError</span></code></pre>
+  </div>
+  <div class="box"><h3>Словарь (map):</h3>
+<pre><code>stock := <span class="k">map</span>[<span class="k">string</span>]<span class="k">int</span>{<span class="s">"чайник"</span>: <span class="n">3</span>}
+stock[<span class="s">"диван"</span>] = <span class="n">1</span>          <span class="c">// добавить или изменить</span>
+delete(stock, <span class="s">"чайник"</span>)     <span class="c">// удалить</span>
+n, ok := stock[<span class="s">"лампа"</span>]     <span class="c">// 0, false — ключа нет, KeyError не будет</span></code></pre>
+    <p>Приём <code>v, ok := m[key]</code> («comma ok») отличает «ключа нет» от «значение равно нулю».</p>
+    <p>Функция тоже может вернуть два значения: в заголовке пишут <code>(int, bool)</code>, в теле — <code>return v, ok</code>.</p>
+  </div>
+  <div class="box py"><h3>Как это было в Python:</h3>
+    <p><code>list</code> → срез <code>[]T</code> · <code>dict</code> → <code>map[K]V</code> · <code>set</code> → своего типа нет, делают <code>map[T]bool</code> · <code>tuple</code> → нет, вместо него несколько возвращаемых значений или структура.</p>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">1.2 Переменные, типы, коллекции</div>
+  <div class="box"><h3>Возможные ошибки:</h3>
+    <ul>
+      <li><b>Ошибки компиляции</b> — программа даже не запустится: неиспользованная переменная или импорт, несовпадение типов, опечатка в имени. В Python такое всплыло бы только при запуске.</li>
+      <li><b>panic</b> — падение во время работы: выход за границы среза, запись в nil-map, деление целого на 0.</li>
+      <li><b>Ошибки-значения</b> (<code>error</code>) — ожидаемые проблемы вроде «пользователь ввёл буквы вместо числа». Их функция возвращает, а не бросает. Об этом урок 2.2.</li>
+    </ul>
+  </div>
+  <div class="box solve"><h3>таймер ЧЧ:ММ:СС</h3>
+<pre><code><span class="k">func</span> FormatDuration(total <span class="k">int</span>) <span class="k">string</span> {
+    h := total / <span class="n">3600</span>
+    m := total % <span class="n">3600</span> / <span class="n">60</span>   <span class="c">// остаток от часов → в минуты</span>
+    s := total % <span class="n">60</span>
+    <span class="k">return</span> fmt.Sprintf(<span class="s">"%02d:%02d:%02d"</span>, h, m, s)
+}</code></pre>
+    <p>Это задача из домашки, решение можно посмотреть. Остальные пиши сам.</p>
+  </div>
+  <div class="box hw" data-lesson="12"><h3>Домашка 1.2 <span class="count"></span></h3>
+    <div class="task" data-test="TestCelsiusToFahrenheit"><label><input type="checkbox" id="t12-1"><span><em>CelsiusToFahrenheit</em> — формула с float64</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Перепиши формулу из условия: <code>c*9/5 + 32</code>. Параметр уже <code>float64</code>, поэтому и результат получится дробным.</p><p><b>Подвох.</b> Будь <code>c</code> типа <code>int</code>, выражение <code>9/5</code> дало бы 1, а не 1.8. Ради этого тип и сделан <code>float64</code>.</p></details></div>
+    <div class="task" data-test="TestAverage"><label><input type="checkbox" id="t12-2"><span><em>Average</em> — среднее трёх int, не потеряв дробь</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Сложи три числа (это <code>int</code>), переведи сумму в <code>float64</code> и только потом раздели на 3.</p><p><b>Подвох.</b> <code>float64((a+b+c)/3)</code> неверно: деление уже прошло в целых числах, и дробная часть потеряна.</p></details></div>
+    <div class="task" data-test="TestFormatDuration"><label><input type="checkbox" id="t12-3"><span><em>FormatDuration</em> — таймер (разобран выше)</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Разобрана в конспекте. Повтори её, не подглядывая: часы <code>total/3600</code>, минуты — остаток от часов, делённый на 60, секунды <code>total%60</code>. <code>%02d</code> добавит ведущий ноль.</p><p><b>Подвох.</b> Минуты — не <code>total/60</code>: это минуты с учётом часов, для 3723 получится 62.</p></details></div>
+    <div class="task" data-test="TestWithoutEnds"><label><input type="checkbox" id="t12-4"><span><em>WithoutEnds</em> — срез без краёв</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Первый элемент имеет индекс 0, последний — <code>len(nums)-1</code>. Нужен срез с 1 по последний, не включая его. Это одна строка.</p><p><b>Подвох.</b> Правая граница среза не включается, поэтому <code>nums[1:len(nums)-1]</code> уже отбрасывает последний элемент.</p></details></div>
+    <div class="task" data-test="TestLookup"><label><input type="checkbox" id="t12-5"><span><em>Lookup</em> — поиск в map через comma ok</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Приём comma ok: <code>v, ok := prices[item]</code>, потом <code>return v, ok</code>.</p><p><b>Подвох.</b> Товар «даром» стоит 0 и при этом есть в словаре. По одной цене его не отличить от отсутствующего, поэтому и нужен <code>ok</code>.</p></details></div>
+    <div class="run"><code>./course/check.sh 12</code><button type="button">Копировать</button></div>
+  </div>
+</div></section>
+
+<!-- ============ РАЗДЕЛ 2 ============ -->
+<div class="part"><b>Раздел 2</b><h2>Условные и логические операторы</h2></div>
+
+<section class="sheet" id="l21"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">2.1 Условные и логические операторы. Условные конструкции</div>
+  <div class="box"><h3>Высказывания:</h3>
+    <p>Высказывание — утверждение, которое может быть истинным или ложным. В Go у него тип <code>bool</code>. В отличие от Python, «пустое» не равно «ложному»: <code>if len(s)</code> не скомпилируется, нужно <code>if len(s) &gt; 0</code>.</p>
+  </div>
+  <div class="box"><h3>Операторы:</h3>
+    <ul>
+      <li>сравнения: <code>==  !=  &lt;  &gt;  &lt;=  &gt;=</code></li>
+      <li>логические: <code>&amp;&amp;</code> (и), <code>||</code> (или), <code>!</code> (не) — вместо and / or / not</li>
+    </ul>
+    <p>Вычисление ленивое, как в Python: в <code>a &amp;&amp; b</code> b не проверяется, если a уже false.</p>
+  </div>
+  <div class="box"><h3>Условный оператор if / else if / else:</h3>
+<pre><code><span class="k">if</span> price == <span class="n">0</span> {
+    fmt.Println(<span class="s">"Отдам даром"</span>)
+} <span class="k">else if</span> price &lt; <span class="n">1000</span> {
+    fmt.Println(<span class="s">"Дёшево"</span>)
+} <span class="k">else</span> {
+    fmt.Println(<span class="s">"Норм цена"</span>)
+}</code></pre>
+    <ul>
+      <li>скобки вокруг условия не пишутся, фигурные — обязательны</li>
+      <li><code>else</code> пишется на той же строке, что и <code>}</code></li>
+      <li>блок кода задают <code>{ }</code>, а не отступы</li>
+    </ul>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">2.1 Условные и логические операторы. Условные конструкции</div>
+  <div class="box"><h3>if с коротким объявлением:</h3>
+<pre><code><span class="k">if</span> n, ok := stock[<span class="s">"диван"</span>]; ok {
+    fmt.Println(<span class="s">"в наличии:"</span>, n)
+}
+<span class="c">// n и ok живут только внутри if</span></code></pre>
+  </div>
+  <div class="box"><h3>Примеры комбинации операторов:</h3>
+<pre><code>age, hasLicense := <span class="n">25</span>, <span class="k">true</span>
+<span class="k">if</span> age &gt;= <span class="n">18</span> &amp;&amp; hasLicense {
+    fmt.Println(<span class="s">"Можно за руль"</span>)
+}
+<span class="k">if</span> !(age &gt;= <span class="n">18</span>) || !hasLicense {
+    fmt.Println(<span class="s">"Нельзя"</span>)
+}</code></pre>
+    <p>Если в одном выражении есть и <code>&amp;&amp;</code>, и <code>||</code>, первым выполняется <code>&amp;&amp;</code>. Если сомневаешься, ставь скобки.</p>
+  </div>
+  <div class="box solve"><h3>оценка по баллам</h3>
+<pre><code><span class="k">func</span> Grade(score <span class="k">int</span>) <span class="k">string</span> {
+    <span class="k">if</span> score &lt; <span class="n">0</span> || score &gt; <span class="n">100</span> {   <span class="c">// сначала отсекаем мусор</span>
+        <span class="k">return</span> <span class="s">"ошибка"</span>
+    }
+    <span class="k">if</span> score &gt;= <span class="n">90</span> {
+        <span class="k">return</span> <span class="s">"отлично"</span>
+    }
+    <span class="c">// … дальше сам: порядок проверок важен</span>
+}</code></pre>
+    <p>Приём «ранний return»: в Go стараются не вкладывать if друг в друга, а сразу выходить из функции.</p>
+  </div>
+  <div class="box hw" data-lesson="21"><h3>Домашка 2.1 <span class="count"></span></h3>
+    <div class="task" data-test="TestGrade"><label><input type="checkbox" id="t21-1"><span><em>Grade</em> — оценка по баллам</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Сначала отсеки мусор (<code>score &lt; 0 || score &gt; 100</code>), потом проверяй пороги сверху вниз: <code>&gt;= 90</code>, <code>&gt;= 75</code>, <code>&gt;= 60</code>, иначе «плохо».</p><p><b>Подвох.</b> Если начать снизу (<code>&gt;= 60</code> первым), то 95 попадёт в «удовлетворительно»: сработает первое подходящее условие.</p></details></div>
+    <div class="task" data-test="TestIsLeapYear"><label><input type="checkbox" id="t21-2"><span><em>IsLeapYear</em> — високосный год одним выражением</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Переведи условие в код дословно: «делится на 4» → <code>year%4 == 0</code>, «но не на 100» → <code>&amp;&amp; year%100 != 0</code>, «или на 400» → <code>|| year%400 == 0</code>. Верни выражение сразу, без if.</p><p><b>Подвох.</b> Проверь в уме 1900 (не високосный) и 2000 (високосный): на них ломаются почти все неверные решения.</p></details></div>
+    <div class="task" data-test="TestCanRent"><label><input type="checkbox" id="t21-3"><span><em>CanRent</em> — каршеринг: &amp;&amp;, || и исключение из правила</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Взять машину можно двумя путями: обычным (21+ и стаж от 2) и с инструктором (19+, стаж от 1 и инструктор). Права нужны в обоих случаях. Получается: <code>hasLicense &amp;&amp; (обычный || с инструктором)</code>.</p><p><b>Подвох.</b> Скобки обязательны: <code>&amp;&amp;</code> выполняется раньше <code>||</code>, и без скобок права будут проверяться только у одного из путей.</p></details></div>
+    <div class="run"><code>./course/check.sh 21</code><button type="button">Копировать</button></div>
+  </div>
+</div></section>
+
+<section class="sheet" id="l22"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">2.2 switch. Ошибки как значения</div>
+  <div class="box"><h3>switch — вместо длинной цепочки if:</h3>
+<pre><code><span class="k">switch</span> status {
+<span class="k">case</span> <span class="s">"new"</span>:
+    fmt.Println(<span class="s">"Новое"</span>)
+<span class="k">case</span> <span class="s">"sold"</span>, <span class="s">"archived"</span>:      <span class="c">// несколько значений через запятую</span>
+    fmt.Println(<span class="s">"Неактивно"</span>)
+<span class="k">default</span>:
+    fmt.Println(<span class="s">"Непонятно"</span>)
+}</code></pre>
+    <p><code>break</code> писать не нужно: выполняется только одна ветка.</p>
+<pre><code><span class="k">switch</span> {                       <span class="c">// switch без выражения = цепочка if</span>
+<span class="k">case</span> price == <span class="n">0</span>:   fmt.Println(<span class="s">"даром"</span>)
+<span class="k">case</span> price &lt; <span class="n">1000</span>: fmt.Println(<span class="s">"дёшево"</span>)
+}</code></pre>
+  </div>
+  <div class="box"><h3>Ошибки — это значения:</h3>
+    <p>Исключений и try/except в Go нет. Функция, которая может не справиться, возвращает два значения: результат и <code>error</code>. Если всё хорошо, ошибка равна <code>nil</code>.</p>
+<pre><code>n, err := strconv.Atoi(<span class="s">"42abc"</span>)
+<span class="k">if</span> err != <span class="k">nil</span> {
+    fmt.Println(<span class="s">"не число:"</span>, err)
+    <span class="k">return</span>
+}
+fmt.Println(n + <span class="n">1</span>)</code></pre>
+    <p><code>if err != nil</code> — самая частая строка в любом Go-проекте. Это нормально.</p>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">2.2 switch. Ошибки как значения</div>
+  <div class="box"><h3>Как создать свою ошибку:</h3>
+<pre><code><span class="k">var</span> ErrNotFound = errors.New(<span class="s">"объявление не найдено"</span>)  <span class="c">// ошибка-«константа»</span>
+
+<span class="k">func</span> FindPrice(prices <span class="k">map</span>[<span class="k">string</span>]<span class="k">int</span>, title <span class="k">string</span>) (<span class="k">int</span>, <span class="k">error</span>) {
+    price, ok := prices[title]
+    <span class="k">if</span> !ok {
+        <span class="k">return</span> <span class="n">0</span>, ErrNotFound
+    }
+    <span class="k">return</span> price, <span class="k">nil</span>
+}
+
+<span class="c">// проверка конкретной ошибки — как except KeyError</span>
+<span class="k">if</span> errors.Is(err, ErrNotFound) { … }
+
+<span class="c">// ошибка с подробностями</span>
+fmt.Errorf(<span class="s">"возраст %d вне диапазона"</span>, n)</code></pre>
+  </div>
+  <div class="box py"><h3>Как это было в Python:</h3>
+    <div class="cmp">
+      <div><small>Python</small><pre><code><span class="k">try</span>:
+    n = int(s)
+<span class="k">except</span> ValueError:
+    print(<span class="s">"не число"</span>)</code></pre></div>
+      <div><small>Go</small><pre><code>n, err := strconv.Atoi(s)
+<span class="k">if</span> err != <span class="k">nil</span> {
+    fmt.Println(<span class="s">"не число"</span>)
+}</code></pre></div>
+    </div>
+  </div>
+  <div class="box"><h3>Пакеты strconv и strings:</h3>
+    <p>Функции для работы со строками в Go — не методы строки, а функции из пакетов стандартной библиотеки:</p>
+    <ul>
+      <li><code>strconv.Atoi("42")</code> → <code>42, nil</code> — строка в число, как <code>int()</code></li>
+      <li><code>strconv.Itoa(42)</code> → <code>"42"</code> — число в строку, как <code>str()</code></li>
+      <li><code>strings.TrimSpace(s)</code> — как <code>s.strip()</code></li>
+      <li><code>strings.ToLower(s)</code>, <code>strings.ToUpper(s)</code></li>
+      <li><code>strings.Fields(s)</code> — как <code>s.split()</code> без аргументов</li>
+      <li><code>strings.Split(s, ",")</code>, <code>strings.Join(parts, "-")</code></li>
+      <li><code>strings.Contains(s, "go")</code> — как <code>"go" in s</code></li>
+    </ul>
+  </div>
+  <div class="box hw" data-lesson="22"><h3>Домашка 2.2 <span class="count"></span></h3>
+    <div class="task" data-test="TestDayType"><label><input type="checkbox" id="t22-1"><span><em>DayType</em> — будний или выходной через switch</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>switch day</code> с двумя <code>case</code>: в первом пять значений через запятую, во втором два. Для всего остального — <code>default</code>.</p><p><b>Подвох.</b> <code>&quot;Пн&quot;</code> с большой буквы — другая строка, поэтому ответ «неизвестно».</p></details></div>
+    <div class="task" data-test="TestDivide"><label><input type="checkbox" id="t22-2"><span><em>Divide</em> — деление с ErrDivByZero</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Сначала проверь <code>b == 0</code> и верни <code>0, ErrDivByZero</code>. Иначе <code>return a / b, nil</code>.</p><p><b>Подвох.</b> Возвращай именно переменную <code>ErrDivByZero</code>. Новая <code>errors.New</code> с тем же текстом не пройдёт: <code>errors.Is</code> сравнивает саму ошибку, а не текст.</p></details></div>
+    <div class="task" data-test="TestParseAge"><label><input type="checkbox" id="t22-3"><span><em>ParseAge</em> — возраст из строки, две причины для ошибки</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Три шага: <code>strings.TrimSpace</code>, затем <code>strconv.Atoi</code> с проверкой <code>err</code>, затем проверка диапазона 0..150. Если на каком-то шаге проблема, сразу <code>return 0, ошибка</code>.</p><p><b>Подвох.</b> <code>&quot;12.5&quot;</code> и <code>&quot;&quot;</code> отдельно ловить не нужно: на них <code>Atoi</code> сам вернёт ошибку.</p></details></div>
+    <div class="task" data-test="TestTriangle"><label><input type="checkbox" id="t22-4"><span><em>Triangle ★</em> — какой треугольник и существует ли он</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>switch</code> без выражения, <code>case</code> проверяются сверху вниз. Первым — «не существует»: любая сторона <code>&lt;= 0</code> или сумма двух сторон <code>&lt;=</code> третьей (три пары). Потом «все равны», потом «хотя бы две равны», в <code>default</code> — разносторонний.</p><p><b>Подвох.</b> Порядок важен: если проверку существования поставить не первой, то (1, 1, 10) окажется «равнобедренным».</p></details></div>
+    <div class="run"><code>./course/check.sh 22</code><button type="button">Копировать</button></div>
+  </div>
+</div></section>
+
+<!-- ============ РАЗДЕЛ 3 ============ -->
+<div class="part"><b>Раздел 3</b><h2>Циклы</h2></div>
+
+<section class="sheet" id="l31"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">3.1 Цикл for</div>
+  <div class="box"><h3>Циклы в Go:</h3>
+    <p>Цикл повторяет блок кода несколько раз. В Go для этого есть одно ключевое слово, <code>for</code>, но у него три формы. Отдельного <code>while</code> нет.</p>
+  </div>
+  <div class="box"><h3>1. Классический for со счётчиком:</h3>
+<pre><code><span class="k">for</span> i := <span class="n">0</span>; i &lt; <span class="n">5</span>; i++ {   <span class="c">// старт; условие; шаг</span>
+    fmt.Println(i)           <span class="c">// 0 1 2 3 4 — как for i in range(5)</span>
+}</code></pre>
+  </div>
+  <div class="box"><h3>2. for с условием — это while:</h3>
+<pre><code>n := <span class="n">12345</span>
+<span class="k">for</span> n &gt; <span class="n">0</span> {
+    n /= <span class="n">10</span>                  <span class="c">// отрезаем последнюю цифру</span>
+}</code></pre>
+  </div>
+  <div class="box"><h3>3. Бесконечный цикл:</h3>
+    <p>Работает, пока его явно не прервут через <code>break</code> или <code>return</code>. Так устроены серверы и игровые циклы. Если забыть про выход, программа зависнет.</p>
+<pre><code><span class="k">for</span> {
+    line := readLine()
+    <span class="k">if</span> line == <span class="s">"exit"</span> {
+        <span class="k">break</span>
+    }
+}</code></pre>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">3.1 Цикл for</div>
+  <div class="box"><h3>Другие операторы в циклах:</h3>
+    <ul>
+      <li><code>break</code> — прерывает цикл, даже если условие ещё истинно</li>
+      <li><code>continue</code> — пропускает остаток итерации и переходит к следующей</li>
+    </ul>
+<pre><code><span class="k">for</span> i := <span class="n">1</span>; i &lt;= <span class="n">10</span>; i++ {
+    <span class="k">if</span> i%<span class="n">2</span> == <span class="n">0</span> {
+        <span class="k">continue</span>       <span class="c">// чётные пропускаем</span>
+    }
+    <span class="k">if</span> i &gt; <span class="n">7</span> {
+        <span class="k">break</span>          <span class="c">// дальше 7 не идём</span>
+    }
+    fmt.Println(i)     <span class="c">// 1 3 5 7</span>
+}</code></pre>
+  </div>
+  <div class="box solve"><h3>простое ли число</h3>
+<pre><code><span class="k">func</span> IsPrime(n <span class="k">int</span>) <span class="k">bool</span> {
+    <span class="k">if</span> n &lt; <span class="n">2</span> {
+        <span class="k">return</span> <span class="k">false</span>
+    }
+    <span class="k">for</span> i := <span class="n">2</span>; i*i &lt;= n; i++ {   <span class="c">// до корня из n</span>
+        <span class="k">if</span> n%i == <span class="n">0</span> {
+            <span class="k">return</span> <span class="k">false</span>          <span class="c">// нашли делитель → выходим сразу</span>
+        }
+    }
+    <span class="k">return</span> <span class="k">true</span>
+}</code></pre>
+    <p>Почему до корня: если у n есть делитель больше √n, то в паре с ним есть и делитель меньше √n, и его мы уже проверили.</p>
+  </div>
+  <div class="box hw" data-lesson="31"><h3>Домашка 3.1 <span class="count"></span></h3>
+    <div class="task" data-test="TestSumTo"><label><input type="checkbox" id="t31-1"><span><em>SumTo</em> — сумма 1..n циклом</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>sum := 0</code>, цикл <code>i</code> от 1 до <code>n</code> включительно, внутри <code>sum += i</code>.</p><p><b>Подвох.</b> При <code>n &lt;= 0</code> цикл ни разу не выполнится и вернётся 0. Отдельная проверка не нужна.</p></details></div>
+    <div class="task" data-test="TestFactorial"><label><input type="checkbox" id="t31-2"><span><em>Factorial</em> — n!</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Как SumTo, только начальное значение 1 и умножение вместо сложения.</p><p><b>Подвох.</b> Если начать с 0, всё умножится на ноль. Случай 0! = 1 получится сам: цикл не выполнится, и вернётся 1.</p></details></div>
+    <div class="task" data-test="TestCountDigits"><label><input type="checkbox" id="t31-3"><span><em>CountDigits</em> — цифры числа (for-как-while)</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Если число отрицательное, сделай его положительным: <code>n = -n</code>. Потом цикл-как-while: пока <code>n &gt;= 10</code>, дели на 10 и увеличивай счётчик. Счёт начинай с 1.</p><p><b>Подвох.</b> С условием «пока <code>n &gt; 0</code>» и счётом с 0 у нуля получится 0 цифр, а должна быть одна.</p></details></div>
+    <div class="task" data-test="TestIsPrime"><label><input type="checkbox" id="t31-4"><span><em>IsPrime</em> — разобрана выше, перепиши сам</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Разобрана в конспекте, напиши заново по памяти. Всё, что меньше 2, — не простое. Затем ищи делитель от 2, пока <code>i*i &lt;= n</code>.</p><p><b>Подвох.</b> Условие именно <code>&lt;=</code>. С <code>&lt;</code> число 25 окажется простым: делитель 5 не проверится.</p></details></div>
+    <div class="task" data-test="TestCollatzSteps"><label><input type="checkbox" id="t31-5"><span><em>CollatzSteps ★</em> — гипотеза Коллатца</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Цикл «пока <code>n != 1</code>». Внутри <code>if/else</code> по чётности и <code>steps++</code>.</p><p><b>Подвох.</b> Проверь на 6 вручную: 6 → 3 → 10 → 5 → 16 → 8 → 4 → 2 → 1, это 8 шагов.</p></details></div>
+    <div class="run"><code>./course/check.sh 31</code><button type="button">Копировать</button></div>
+  </div>
+</div></section>
+
+<section class="sheet" id="l32"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">3.2 for range. Перебор коллекций</div>
+  <div class="box"><h3>for range — перебор последовательности:</h3>
+<pre><code>items := []<span class="k">string</span>{<span class="s">"чайник"</span>, <span class="s">"диван"</span>}
+<span class="k">for</span> i, item := <span class="k">range</span> items {     <span class="c">// как for i, item in enumerate(items)</span>
+    fmt.Println(i, item)
+}
+<span class="k">for</span> _, item := <span class="k">range</span> items { … } <span class="c">// индекс не нужен → _</span>
+<span class="k">for</span> i := <span class="k">range</span> items { … }       <span class="c">// нужен только индекс</span>
+
+<span class="k">for</span> name, qty := <span class="k">range</span> stock { … } <span class="c">// map: ключ и значение</span>
+<span class="k">for</span> i := <span class="k">range</span> <span class="n">5</span> { … }             <span class="c">// 0..4, с Go 1.22</span></code></pre>
+    <p>Порядок обхода map случайный, и это сделано намеренно. Если нужен порядок, сортируй ключи.</p>
+  </div>
+  <div class="box"><h3>Строки, байты и руны:</h3>
+    <p>Строка в Go — это байты в UTF-8. Латинская буква занимает 1 байт, кириллическая — 2.</p>
+<pre><code>s := <span class="s">"Гоша"</span>
+len(s)                 <span class="c">// 8 — байт, а не букв!</span>
+len([]rune(s))         <span class="c">// 4 — букв (rune = символ)</span>
+<span class="k">for</span> _, r := <span class="k">range</span> s {   <span class="c">// range по строке отдаёт руны — это правильно</span>
+    fmt.Printf(<span class="s">"%c "</span>, r)
+}</code></pre>
+    <p>Срез рун можно менять, как любой срез. Обратно в строку: <code>string(runes)</code>.</p>
+  </div>
+  <div class="box"><h3>Сборка нового среза:</h3>
+    <p>Списковых выражений вида <code>[x for x in ...]</code> в Go нет. Пишут обычный цикл с append:</p>
+<pre><code>cheap := []<span class="k">int</span>{}
+<span class="k">for</span> _, p := <span class="k">range</span> prices {
+    <span class="k">if</span> p &lt; <span class="n">1000</span> {
+        cheap = append(cheap, p)
+    }
+}</code></pre>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">3.2 for range. Перебор коллекций</div>
+  <div class="box"><h3>Обработка ошибок в циклах:</h3>
+    <p>Аналог try/except внутри цикла. Обычно на ошибке либо пропускают элемент через <code>continue</code>, либо останавливаются и возвращают ошибку с контекстом:</p>
+<pre><code><span class="k">for</span> i, line := <span class="k">range</span> lines {
+    n, err := strconv.Atoi(line)
+    <span class="k">if</span> err != <span class="k">nil</span> {
+        <span class="k">return</span> <span class="k">nil</span>, fmt.Errorf(<span class="s">"строка %d: %w"</span>, i+<span class="n">1</span>, err)
+    }
+    result = append(result, n)
+}</code></pre>
+    <p><code>%w</code> «заворачивает» исходную ошибку внутрь новой: снаружи видно, где сломалось, а <code>errors.Is</code> по-прежнему находит исходную причину.</p>
+  </div>
+  <div class="box solve"><h3>частотный словарь</h3>
+<pre><code>counts := <span class="k">map</span>[<span class="k">string</span>]<span class="k">int</span>{}
+<span class="k">for</span> _, w := <span class="k">range</span> strings.Fields(text) {
+    counts[strings.ToLower(w)]++   <span class="c">// нет ключа → 0, потом +1</span>
+}</code></pre>
+    <p>Нулевое значение спасает: <code>defaultdict</code> не нужен.</p>
+  </div>
+  <div class="box hw" data-lesson="32"><h3>Домашка 3.2 <span class="count"></span></h3>
+    <div class="task" data-test="TestEvens"><label><input type="checkbox" id="t32-1"><span><em>Evens</em> — новый срез из чётных</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Заведи пустой срез <code>result := []int{}</code>, пройди <code>range</code>, чётные (<code>v%2 == 0</code>) добавляй через <code>append</code>.</p><p><b>Подвох.</b> Отрицательные тоже бывают чётными: <code>-2 % 2 == 0</code>. А <code>-3 % 2</code> равно -1, а не 1, поэтому проверяй чётность через <code>== 0</code>.</p></details></div>
+    <div class="task" data-test="TestWordCount"><label><input type="checkbox" id="t32-2"><span><em>WordCount</em> — частотный словарь (разобран выше)</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Разобрана в конспекте. Словарь <code>map[string]int{}</code>, цикл по <code>strings.Fields(text)</code>, счётчик <code>counts[strings.ToLower(w)]++</code>.</p><p><b>Подвох.</b> Если вернуть <code>nil</code>-map, тест на непустом тексте не пройдёт. Создай словарь заранее.</p></details></div>
+    <div class="task" data-test="TestReverse"><label><input type="checkbox" id="t32-3"><span><em>Reverse</em> — переворот строки с кириллицей</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>r := []rune(s)</code>, затем цикл <code>i</code> от 0 до <code>len(r)/2</code>: меняй местами <code>r[i]</code> и <code>r[len(r)-1-i]</code> через <code>a, b = b, a</code>. В конце <code>string(r)</code>.</p><p><b>Подвох.</b> Если переворачивать байты, а не руны, кириллица превратится в мусор: каждая буква занимает 2 байта.</p></details></div>
+    <div class="task" data-test="TestParseAll"><label><input type="checkbox" id="t32-4"><span><em>ParseAll</em> — числа из строк: continue и ошибка с номером строки</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>for i, line := range lines</code>. Пустую строку пропускай через <code>continue</code>. При ошибке <code>Atoi</code> сразу <code>return nil, fmt.Errorf(&quot;строка %d: %w&quot;, i+1, err)</code>.</p><p><b>Подвох.</b> Номер строки — <code>i+1</code> из <code>range</code>, а не отдельный счётчик: пропущенные пустые строки тоже входят в нумерацию.</p></details></div>
+    <div class="task" data-test="TestUnique"><label><input type="checkbox" id="t32-5"><span><em>Unique ★</em> — убрать повторы, сохранив порядок</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>seen := map[int]bool{}</code> и новый срез. Для каждого <code>v</code>: если <code>seen[v]</code>, пропусти, иначе добавь в результат и запиши <code>seen[v] = true</code>.</p><p><b>Подвох.</b> Для отсутствующего ключа map вернёт <code>false</code>, это нулевое значение. Поэтому <code>if seen[v]</code> работает без проверки comma ok.</p></details></div>
+    <div class="run"><code>./course/check.sh 32</code><button type="button">Копировать</button></div>
+  </div>
+</div></section>
+
+<!-- ============ РАЗДЕЛ 4 ============ -->
+<div class="part"><b>Раздел 4</b><h2>Функции и указатели</h2></div>
+
+<section class="sheet" id="l41"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">4.1 Свои функции</div>
+  <div class="box"><h3>Функция:</h3>
+    <p>Функция — именованный блок кода, который выполняется при вызове. У параметров и результата всегда указаны типы.</p>
+<pre><code><span class="k">func</span> Add(a, b <span class="k">int</span>) <span class="k">int</span> {           <span class="c">// одинаковые типы можно объединить</span>
+    <span class="k">return</span> a + b
+}
+
+<span class="k">func</span> Split(total <span class="k">int</span>) (<span class="k">int</span>, <span class="k">int</span>) {  <span class="c">// несколько результатов</span>
+    <span class="k">return</span> total / <span class="n">60</span>, total % <span class="n">60</span>
+}
+min, sec := Split(<span class="n">125</span>)               <span class="c">// 2, 5</span></code></pre>
+    <p>Значений по умолчанию и именованных аргументов нет. Если параметров слишком много, передают структуру.</p>
+  </div>
+  <div class="box"><h3>Переменное число аргументов (variadic):</h3>
+<pre><code><span class="k">func</span> Sum(nums ...<span class="k">int</span>) <span class="k">int</span> { … }   <span class="c">// внутри nums — это []int</span>
+Sum(<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>)
+Sum(prices...)                      <span class="c">// распаковать срез, как *prices</span></code></pre>
+  </div>
+  <div class="box"><h3>Рекурсивная функция вызывает сама себя:</h3>
+<pre><code><span class="k">func</span> Factorial(n <span class="k">int</span>) <span class="k">int</span> {
+    <span class="k">if</span> n &lt;= <span class="n">1</span> {
+        <span class="k">return</span> <span class="n">1</span>                <span class="c">// базовый случай — без него бесконечная рекурсия</span>
+    }
+    <span class="k">return</span> n * Factorial(n-<span class="n">1</span>)
+}</code></pre>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">4.1 Свои функции</div>
+  <div class="box"><h3>Функции — тоже значения:</h3>
+    <p>Функцию можно положить в переменную, передать в другую функцию или вернуть из неё. Аналог lambda — анонимная функция:</p>
+<pre><code>double := <span class="k">func</span>(n <span class="k">int</span>) <span class="k">int</span> { <span class="k">return</span> n * <span class="n">2</span> }
+double(<span class="n">4</span>)  <span class="c">// 8</span>
+
+<span class="k">func</span> Apply(f <span class="k">func</span>(<span class="k">int</span>) <span class="k">int</span>, x <span class="k">int</span>) <span class="k">int</span> { <span class="k">return</span> f(x) }</code></pre>
+  </div>
+  <div class="box"><h3>Замыкание:</h3>
+    <p>Анонимная функция запоминает переменные, которые были вокруг неё при создании, и может их менять:</p>
+<pre><code><span class="k">func</span> NewID() <span class="k">func</span>() <span class="k">int</span> {
+    last := <span class="n">0</span>
+    <span class="k">return</span> <span class="k">func</span>() <span class="k">int</span> {
+        last++                 <span class="c">// это та же last, а не копия</span>
+        <span class="k">return</span> last
+    }
+}
+next := NewID()
+next(); next()             <span class="c">// 1, 2</span></code></pre>
+  </div>
+  <div class="box py"><h3>В чём смысл функций?</h3>
+    <p>Тот же, что в Python: не повторять код, дать куску логики понятное имя и проверять его отдельно. Тесты к домашкам как раз проверяют каждую функцию по отдельности.</p>
+  </div>
+  <div class="box hw" data-lesson="41"><h3>Домашка 4.1 <span class="count"></span></h3>
+    <div class="task" data-test="TestMinMax"><label><input type="checkbox" id="t41-1"><span><em>MinMax</em> — два результата</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>mn, mx := a, a</code>, потом сравни с <code>b</code> и <code>c</code> и обнови. В конце <code>return mn, mx</code>.</p><p><b>Подвох.</b> Проверь случай, где минимум последний: <code>(3, 2, 1)</code>.</p></details></div>
+    <div class="task" data-test="TestMaxOf"><label><input type="checkbox" id="t41-2"><span><em>MaxOf</em> — variadic + флаг «пусто»</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Внутри функции <code>nums</code> — обычный срез. Если <code>len(nums) == 0</code>, верни <code>0, false</code>. Иначе за начальный максимум возьми <code>nums[0]</code> и пройди <code>range</code>.</p><p><b>Подвох.</b> Если начать с максимума 0, решение сломается на одних отрицательных числах: <code>(-5, -2, -9)</code>.</p></details></div>
+    <div class="task" data-test="TestFib"><label><input type="checkbox" id="t41-3"><span><em>Fib</em> — Фибоначчи рекурсией</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Базовый случай: <code>if n &lt; 2 { return n }</code>, он покрывает и 0, и 1. Иначе <code>return Fib(n-1) + Fib(n-2)</code>.</p><p><b>Подвох.</b> Без базового случая рекурсия бесконечна, и программа упадёт с переполнением стека.</p></details></div>
+    <div class="task" data-test="TestNewCounter"><label><input type="checkbox" id="t41-4"><span><em>NewCounter</em> — счётчик просмотров на замыкании</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Внутри <code>NewCounter</code> объяви <code>count := 0</code> и верни анонимную функцию, которая делает <code>count++</code> и возвращает <code>count</code>.</p><p><b>Подвох.</b> Если объявить <code>count</code> вне функции (на уровне пакета), все счётчики станут общими. Тест это проверяет.</p></details></div>
+    <div class="task" data-test="TestApplyTwice"><label><input type="checkbox" id="t41-5"><span><em>ApplyTwice ★</em> — функция как аргумент</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>f</code> — обычная переменная, функцию вызывают как <code>f(x)</code>. Результат первого вызова передай во второй.</p><p><b>Подвох.</b> Решается одной строкой.</p></details></div>
+    <div class="run"><code>./course/check.sh 41</code><button type="button">Копировать</button></div>
+  </div>
+</div></section>
+
+<section class="sheet" id="l42"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">4.2 Указатели. defer, panic, recover</div>
+  <div class="box"><h3>Указатель — адрес значения:</h3>
+    <p>В Python все переменные — ссылки, и об этом можно не думать. В Go аргументы <b>копируются</b>: функция получает копию значения. Если нужно изменить оригинал, передают указатель — адрес переменной в памяти.</p>
+<pre><code>price := <span class="n">5000</span>
+p := &amp;price          <span class="c">// &amp; — взять адрес. p имеет тип *int</span>
+*p = <span class="n">4500</span>            <span class="c">// * — пойти по адресу. Теперь price == 4500</span>
+
+<span class="k">func</span> Discount(p *<span class="k">int</span>) { *p = *p * <span class="n">9</span> / <span class="n">10</span> }
+Discount(&amp;price)     <span class="c">// меняет price у вызывающего</span></code></pre>
+    <ul>
+      <li>Нулевое значение указателя — <code>nil</code>. Если разыменовать nil, будет panic, поэтому сначала проверяют <code>if p != nil</code></li>
+      <li>Арифметики указателей, как в C, нет: это безопасные указатели</li>
+    </ul>
+  </div>
+  <div class="box"><h3>Что копируется, а что нет:</h3>
+    <ul>
+      <li><code>int</code>, <code>string</code>, <code>bool</code>, структуры, массивы <code>[3]int</code> копируются целиком</li>
+      <li>срез, map и канал при копировании передают «заголовок», а данные внутри остаются общими. Поэтому <code>s[i] = …</code> внутри функции видно снаружи</li>
+      <li>но <code>append</code> внутри функции может создать новый массив, и снаружи его не увидят. Поэтому append всегда возвращает срез: <code>s = append(s, x)</code></li>
+    </ul>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">4.2 Указатели. defer, panic, recover</div>
+  <div class="box"><h3>defer — «сделай при выходе из функции»:</h3>
+    <p>Аналог <code>with</code> и <code>finally</code> из Python. Вызов после defer выполнится, когда функция завершится, как бы она ни завершилась: обычным return, по ошибке или через panic.</p>
+<pre><code>f, err := os.Open(<span class="s">"ads.csv"</span>)
+<span class="k">if</span> err != <span class="k">nil</span> {
+    <span class="k">return</span> err
+}
+<span class="k">defer</span> f.Close()          <span class="c">// закрытие пишут сразу после открытия</span>
+<span class="c">// … работаем с файлом …</span></code></pre>
+    <p>Если defer несколько, они выполняются в обратном порядке, как стек: последний отложенный срабатывает первым.</p>
+  </div>
+  <div class="box"><h3>panic и recover:</h3>
+    <p><code>panic</code> — аварийная остановка: выход за границы среза, nil-указатель, деление целого на 0. Это не замена ошибкам. Panic означает баг в программе, а обычные проблемы передают через <code>error</code>.</p>
+    <p><code>recover()</code> внутри defer «ловит» panic. Его используют на границах системы: например, веб-сервер не должен падать целиком из-за одного запроса.</p>
+<pre><code><span class="k">func</span> Safe(f <span class="k">func</span>()) (err <span class="k">error</span>) {
+    <span class="k">defer</span> <span class="k">func</span>() {
+        <span class="k">if</span> r := recover(); r != <span class="k">nil</span> {
+            err = fmt.Errorf(<span class="s">"паника: %v"</span>, r)  <span class="c">// меняем именованный результат</span>
+        }
+    }()
+    f()
+    <span class="k">return</span> <span class="k">nil</span>
+}</code></pre>
+  </div>
+  <div class="box hw" data-lesson="42"><h3>Домашка 4.2 <span class="count"></span></h3>
+    <div class="task" data-test="TestSwap"><label><input type="checkbox" id="t42-1"><span><em>Swap</em> — обмен через указатели</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>a</code> и <code>b</code> — адреса, сами числа достаются через <code>*a</code> и <code>*b</code>. Обменяй их одной строкой: <code>*a, *b = *b, *a</code>.</p><p><b>Подвох.</b> <code>a, b = b, a</code> поменяет только локальные копии указателей, а числа у вызывающего останутся прежними.</p></details></div>
+    <div class="task" data-test="TestValueOr"><label><input type="checkbox" id="t42-2"><span><em>ValueOr</em> — безопасное разыменование nil</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Если <code>p == nil</code>, верни <code>def</code>. Иначе верни <code>*p</code>.</p><p><b>Подвох.</b> Указатель на 0 — не nil. Ноль по адресу — нормальное значение, его и нужно вернуть.</p></details></div>
+    <div class="task" data-test="TestDoubleInPlace"><label><input type="checkbox" id="t42-3"><span><em>DoubleInPlace</em> — изменить срез без return</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Пройди по индексам (<code>for i := range nums</code>) и пиши <code>nums[i] *= 2</code>.</p><p><b>Подвох.</b> В <code>for _, v := range nums { v *= 2 }</code> меняется копия <code>v</code>, а не элемент среза.</p></details></div>
+    <div class="task" data-test="TestSafeDivide"><label><input type="checkbox" id="t42-4"><span><em>SafeDivide</em> — поймать panic через recover</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Первой строкой поставь <code>defer func() { ... }()</code>, а внутри <code>if r := recover(); r != nil</code> присвой <code>res = 0</code> и <code>err = fmt.Errorf(&quot;%v&quot;, r)</code>. Дальше обычный <code>return a / b, nil</code>.</p><p><b>Подвох.</b> Работает только с именованными результатами <code>(res int, err error)</code>: defer меняет их уже после return.</p></details></div>
+    <div class="task" data-test="TestOpenAll"><label><input type="checkbox" id="t42-5"><span><em>OpenAll ★</em> — порядок срабатывания defer</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> В цикле: <code>log = append(log, &quot;open &quot;+name)</code>, затем <code>defer func() { log = append(log, &quot;close &quot;+name) }()</code>. В конце <code>return log</code>.</p><p><b>Подвох.</b> Все defer срабатывают не в конце каждой итерации, а при выходе из функции, в обратном порядке. Так и получается «close» задом наперёд.</p></details></div>
+    <div class="run"><code>./course/check.sh 42</code><button type="button">Копировать</button></div>
+  </div>
+</div></section>
+
+<!-- ============ РАЗДЕЛ 5 ============ -->
+<div class="part"><b>Раздел 5</b><h2>ООП в Go</h2></div>
+
+<section class="sheet" id="l51"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">5.1 Структуры, методы, инкапсуляция</div>
+  <div class="box"><h3>ООП без классов:</h3>
+    <p>Классов в Go нет, но три идеи ООП остаются:</p>
+    <ul>
+      <li><b>инкапсуляция</b> — через видимость имён в пакете (этот урок)</li>
+      <li><b>полиморфизм</b> — через интерфейсы (5.2)</li>
+      <li><b>наследования нет</b> — вместо него встраивание и композиция (5.2)</li>
+    </ul>
+  </div>
+  <div class="box"><h3>Структура — свой тип данных:</h3>
+<pre><code><span class="k">type</span> Ad <span class="k">struct</span> {
+    Title <span class="k">string</span>
+    price <span class="k">int</span>      <span class="c">// с маленькой буквы: скрыто от других пакетов</span>
+    sold  <span class="k">bool</span>
+}
+ad := Ad{Title: <span class="s">"Диван"</span>}  <span class="c">// пропущенные поля получают нулевые значения</span></code></pre>
+  </div>
+  <div class="box"><h3>Методы:</h3>
+    <p>Метод — функция, привязанная к типу. Тип пишется в скобках перед именем метода, это «получатель», аналог <code>self</code>:</p>
+<pre><code><span class="k">func</span> (a Ad) Price() <span class="k">int</span> { <span class="k">return</span> a.price }  <span class="c">// получатель-значение: копия</span>
+<span class="k">func</span> (a *Ad) MarkSold()  { a.sold = <span class="k">true</span> }  <span class="c">// получатель-указатель: оригинал</span></code></pre>
+    <p>Правило: если метод меняет поля, получатель должен быть <code>*Ad</code>, иначе изменится копия. На практике, если хоть один метод типа принимает указатель, указатель делают у всех.</p>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">5.1 Структуры, методы, инкапсуляция</div>
+  <div class="box"><h3>Пакеты и инкапсуляция:</h3>
+    <p>Пакет — это папка с .go-файлами, у которых одинаковая строка <code>package имя</code>. Импорт идёт по пути от имени модуля: <code>import "gazgol/course/lesson51"</code>.</p>
+    <ul>
+      <li>Имя с <b>большой</b> буквы (<code>NewAd</code>, <code>Title</code>) видно снаружи пакета</li>
+      <li>Имя с <b>маленькой</b> (<code>price</code>) — только внутри пакета. В Python <code>_price</code> — просто договорённость, а в Go это проверяет компилятор</li>
+    </ul>
+  </div>
+  <div class="box"><h3>Конструктор:</h3>
+    <p>Специального <code>__init__</code> нет. Принято писать функцию <code>NewТип</code>, которая проверяет данные и возвращает указатель:</p>
+<pre><code><span class="k">func</span> NewAd(title <span class="k">string</span>, price <span class="k">int</span>) (*Ad, <span class="k">error</span>) {
+    <span class="k">if</span> price &lt; <span class="n">0</span> {
+        <span class="k">return</span> <span class="k">nil</span>, errors.New(<span class="s">"цена не может быть отрицательной"</span>)
+    }
+    <span class="k">return</span> &amp;Ad{Title: title, price: price}, <span class="k">nil</span>
+}</code></pre>
+    <p>Раз <code>price</code> скрыто, снаружи нельзя написать <code>ad.price = -100</code>. Цену можно поменять только через методы, которые проверяют правила. В этом и смысл инкапсуляции.</p>
+  </div>
+  <div class="box py"><h3>Как это было в Python:</h3>
+    <p><code>class Ad:</code> → <code>type Ad struct</code> · <code>def __init__</code> → <code>func NewAd</code> · <code>self</code> → получатель <code>(a *Ad)</code> · <code>__str__</code> → метод <code>String() string</code> · <code>@property</code> → геттер <code>Price()</code> без приставки Get.</p>
+  </div>
+  <div class="box hw" data-lesson="51"><h3>Домашка 5.1 <span class="count"></span></h3>
+    <div class="task" data-test="TestNewAd"><label><input type="checkbox" id="t51-1"><span><em>NewAd</em> — конструктор с проверками</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Если <code>strings.TrimSpace(title) == &quot;&quot;</code> или <code>price &lt; 0</code>, верни <code>nil</code> и ошибку. Иначе <code>return &amp;Ad{Title: title, price: price}, nil</code>.</p><p><b>Подвох.</b> Цена 0 допустима: «отдам даром» — нормальное объявление.</p></details></div>
+    <div class="task" data-test="TestGetters"><label><input type="checkbox" id="t51-2"><span><em>Price, IsSold</em> — геттеры к скрытым полям</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> По одной строке в каждом методе: вернуть поле. Смысл задачи в том, что снаружи пакета поле <code>price</code> недоступно, а метод <code>Price()</code> доступен.</p><p><b>Подвох.</b> Get в названии не пишут: <code>Price()</code>, а не <code>GetPrice()</code>.</p></details></div>
+    <div class="task" data-test="TestMarkSold"><label><input type="checkbox" id="t51-3"><span><em>MarkSold</em> — метод с указателем</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Одна строка: <code>a.sold = true</code>.</p><p><b>Подвох.</b> Ответ на вопрос из условия: с получателем <code>Ad</code> изменилась бы копия, и объявление осталось бы непроданным.</p></details></div>
+    <div class="task" data-test="TestDiscount"><label><input type="checkbox" id="t51-4"><span><em>Discount</em> — изменение только по правилам</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Сначала все проверки (<code>percent</code> вне 1..90 или <code>a.sold</code>, тогда <code>return</code> ошибку), и только потом <code>a.price -= a.price * percent / 100</code>.</p><p><b>Подвох.</b> Если поменять цену до проверок, то при ошибке она уже испорчена. Тест это ловит.</p></details></div>
+    <div class="task" data-test="TestString"><label><input type="checkbox" id="t51-5"><span><em>String</em> — «Велосипед — 5000 ₽ (продано)»</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Основу собери через <code>fmt.Sprintf(&quot;%s — %d ₽&quot;, ...)</code>, и если <code>a.sold</code>, допиши <code>&quot; (продано)&quot;</code>.</p><p><b>Подвох.</b> Тире длинное (—) и окружено пробелами. Скопируй его из условия.</p></details></div>
+    <div class="run"><code>./course/check.sh 51</code><button type="button">Копировать</button></div>
+  </div>
+</div></section>
+
+<section class="sheet" id="l52"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">5.2 Встраивание и интерфейсы</div>
+  <div class="box"><h3>Встраивание вместо наследования:</h3>
+    <p>Если в структуру положить другой тип без имени поля, его поля и методы «поднимаются» наверх. Получается композиция: Seller <i>содержит</i> User, а не <i>является</i> им.</p>
+<pre><code><span class="k">type</span> User <span class="k">struct</span> { Name <span class="k">string</span> }
+<span class="k">func</span> (u User) Hello() <span class="k">string</span> { <span class="k">return</span> <span class="s">"Я "</span> + u.Name }
+
+<span class="k">type</span> Seller <span class="k">struct</span> {
+    User              <span class="c">// встроили</span>
+    Phone <span class="k">string</span>
+}
+s := Seller{User: User{<span class="s">"Гоша"</span>}, Phone: <span class="s">"+7…"</span>}
+s.Name; s.Hello()     <span class="c">// работает, как будто это поля Seller</span>
+s.User.Hello()        <span class="c">// явный вызов «родителя», аналог super()</span></code></pre>
+    <p>Важно: <code>Seller</code> нельзя передать туда, где ждут <code>User</code>. Это разные типы. Общее поведение описывают интерфейсами.</p>
+  </div>
+  <div class="box"><h3>Интерфейс — набор методов:</h3>
+<pre><code><span class="k">type</span> Delivery <span class="k">interface</span> {
+    Name() <span class="k">string</span>
+    Cost(km <span class="k">int</span>) <span class="k">int</span>
+}</code></pre>
+    <p>Если получатель внутри метода не нужен, имя можно не писать: <code>func (Pickup) Cost(km int) int { return 0 }</code>.</p>
+    <p>Любой тип, у которого есть эти методы, <b>автоматически</b> реализует интерфейс. Слова <code>implements</code> нет. Это утиная типизация, как в Python, только проверяет её компилятор.</p>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">5.2 Встраивание и интерфейсы</div>
+  <div class="box"><h3>Полиморфизм:</h3>
+    <p>Функция принимает интерфейс и работает с любым типом, который его реализует. Конкретные типы ей знать не нужно:</p>
+<pre><code><span class="k">func</span> PrintPrices(opts []Delivery, km <span class="k">int</span>) {
+    <span class="k">for</span> _, d := <span class="k">range</span> opts {
+        fmt.Println(d.Name(), d.Cost(km))   <span class="c">// у каждого типа своя Cost</span>
+    }
+}
+PrintPrices([]Delivery{Pickup{}, Courier{PerKm: <span class="n">30</span>}}, <span class="n">10</span>)</code></pre>
+  </div>
+  <div class="box"><h3>Интерфейсы, которые уже встречались:</h3>
+    <ul>
+      <li><code>error</code> — это интерфейс с одним методом <code>Error() string</code></li>
+      <li><code>fmt.Stringer</code> — <code>String() string</code>. Его ищет fmt.Println</li>
+      <li><code>any</code> — пустой интерфейс, ему подходит любое значение</li>
+    </ul>
+    <p>Правило Go: интерфейсы делают маленькими, на 1–2 метода, и объявляют там, где их <i>используют</i>, а не там, где реализуют.</p>
+  </div>
+  <div class="box"><h3>Узнать конкретный тип (type switch):</h3>
+<pre><code><span class="k">switch</span> x := v.(<span class="k">type</span>) {
+<span class="k">case</span> <span class="k">int</span>:          fmt.Println(<span class="s">"число"</span>, x+<span class="n">1</span>)
+<span class="k">case</span> fmt.Stringer: fmt.Println(x.String())
+<span class="k">case</span> <span class="k">nil</span>:          fmt.Println(<span class="s">"пусто"</span>)
+}
+d, ok := v.(Delivery)   <span class="c">// проверка одного типа, как isinstance</span></code></pre>
+  </div>
+  <div class="box hw" data-lesson="52"><h3>Домашка 5.2 <span class="count"></span></h3>
+    <div class="task" data-test="TestUserContact"><label><input type="checkbox" id="t52-1"><span><em>User.Contact</em> — «Гоша (★4.8)»</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>fmt.Sprintf(&quot;%s (★%.1f)&quot;, u.Name, u.Rating)</code>. <code>%.1f</code> оставит один знак после запятой: 4.83 → 4.8, 5 → 5.0.</p><p><b>Подвох.</b> Звёздочку ★ скопируй из условия, на клавиатуре её нет.</p></details></div>
+    <div class="task" data-test="TestSellerContact"><label><input type="checkbox" id="t52-2"><span><em>Seller.Contact</em> — переопределение через встроенный User</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Вызови <code>s.User.Contact()</code> и допиши <code>&quot;, тел. &quot; + s.Phone</code>.</p><p><b>Подвох.</b> Если внутри написать <code>s.Contact()</code>, метод Seller будет вызывать сам себя бесконечно.</p></details></div>
+    <div class="task" data-test="TestDeliveries"><label><input type="checkbox" id="t52-3"><span><em>Pickup, Courier, Post</em> — три реализации Delivery</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Заполни шесть однострочных методов. У курьера ставку бери из получателя: <code>c.PerKm</code>. У почты <code>km / 100</code> — целое деление, полные сотни.</p><p><b>Подвох.</b> Для почты на 250 км две полные сотни: 350 + 2·50 = 450.</p></details></div>
+    <div class="task" data-test="TestCheapest"><label><input type="checkbox" id="t52-4"><span><em>Cheapest</em> — полиморфный выбор доставки</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Пустой срез → <code>nil</code> и ошибка. Иначе <code>best := options[0]</code>, пройди остальные и заменяй <code>best</code>, если <code>Cost</code> строго меньше.</p><p><b>Подвох.</b> С <code>&lt;=</code> при равной цене выберется последний вариант, а нужен первый.</p></details></div>
+    <div class="task" data-test="TestDescribe"><label><input type="checkbox" id="t52-5"><span><em>Describe ★</em> — type switch, порядок case важен</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>switch x := v.(type)</code> с <code>case</code> в том порядке, что в условии: <code>Delivery</code>, <code>error</code>, <code>fmt.Stringer</code>, <code>int</code>, <code>nil</code>, <code>default</code>.</p><p><b>Подвох.</b> Срабатывает первый подходящий <code>case</code>. <code>time.Second</code> тоже Stringer и даст <code>&quot;1s&quot;</code>, а обычная строка <code>&quot;строка&quot;</code> — не Stringer, для неё ответ «неизвестно».</p></details></div>
+    <div class="run"><code>./course/check.sh 52</code><button type="button">Копировать</button></div>
+  </div>
+</div></section>
+
+<!-- ============ РАЗДЕЛ 6 ============ -->
+<div class="part"><b>Раздел 6</b><h2>Конкурентность</h2></div>
+
+<section class="sheet" id="l61"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">6.1 Горутины и каналы</div>
+  <div class="box"><h3>Горутина:</h3>
+    <p>Горутина — функция, которая выполняется одновременно с остальным кодом. Достаточно написать <code>go</code> перед вызовом. Горутины очень лёгкие: можно запустить сотни тысяч, и Go сам распределит их по ядрам процессора. В Python ближайший аналог — asyncio, но там нет настоящего параллелизма из-за GIL, а здесь он есть.</p>
+<pre><code><span class="k">go</span> sendEmail(user)       <span class="c">// запустили и пошли дальше, не ждём</span>
+<span class="k">go</span> <span class="k">func</span>() {
+    fmt.Println(<span class="s">"я в горутине"</span>)
+}()</code></pre>
+    <p>Когда завершается <code>main</code>, программа завершается целиком, даже если горутины ещё работают. Поэтому их нужно дожидаться: через каналы или WaitGroup (6.2).</p>
+  </div>
+  <div class="box"><h3>Канал — труба между горутинами:</h3>
+<pre><code>ch := make(<span class="k">chan</span> <span class="k">int</span>)      <span class="c">// небуферизованный: отправитель ждёт получателя</span>
+<span class="k">go</span> <span class="k">func</span>() { ch &lt;- <span class="n">42</span> }()   <span class="c">// отправить</span>
+v := &lt;-ch                  <span class="c">// получить (ждёт, пока придёт значение)</span>
+
+buf := make(<span class="k">chan</span> <span class="k">int</span>, <span class="n">10</span>) <span class="c">// буферизованный: до 10 значений без ожидания</span>
+close(ch)                  <span class="c">// «больше ничего не будет»</span>
+<span class="k">for</span> v := <span class="k">range</span> ch { … }   <span class="c">// читать, пока канал не закроют</span></code></pre>
+    <p>Девиз Go: «не общайтесь через общую память, делитесь памятью через общение». Вместо общих переменных с блокировками данные передают по каналам.</p>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">6.1 Горутины и каналы</div>
+  <div class="box"><h3>Конвейер (pipeline):</h3>
+<pre><code><span class="k">func</span> Generate(n <span class="k">int</span>) &lt;-<span class="k">chan</span> <span class="k">int</span> {   <span class="c">// &lt;-chan: канал только для чтения</span>
+    ch := make(<span class="k">chan</span> <span class="k">int</span>)
+    <span class="k">go</span> <span class="k">func</span>() {
+        <span class="k">defer</span> close(ch)               <span class="c">// закрывает тот, кто пишет</span>
+        <span class="k">for</span> i := <span class="n">1</span>; i &lt;= n; i++ {
+            ch &lt;- i
+        }
+    }()
+    <span class="k">return</span> ch
+}</code></pre>
+    <p>Каждая стадия — горутина, которая читает из одного канала и пишет в другой. Стадии работают одновременно.</p>
+  </div>
+  <div class="box"><h3>select — ждать несколько каналов сразу:</h3>
+<pre><code><span class="k">select</span> {
+<span class="k">case</span> v := &lt;-results:
+    fmt.Println(<span class="s">"ответ:"</span>, v)
+<span class="k">case</span> &lt;-time.After(<span class="n">2</span> * time.Second):
+    fmt.Println(<span class="s">"слишком долго"</span>)
+}</code></pre>
+    <p>select выполняет ту ветку, канал которой готов первым. Так делают таймауты и отмену операций.</p>
+  </div>
+  <div class="box"><h3>Типичные ошибки:</h3>
+    <ul>
+      <li>deadlock — все горутины ждут друг друга. Go пишет <code>all goroutines are asleep</code></li>
+      <li>утечка горутины — она навсегда застряла на отправке в канал, который никто не читает</li>
+      <li>отправка в закрытый канал вызывает panic</li>
+    </ul>
+  </div>
+  <div class="box hw" data-lesson="61"><h3>Домашка 6.1 <span class="count"></span></h3>
+    <div class="task" data-test="TestGenerate"><label><input type="checkbox" id="t61-1"><span><em>Generate</em> — генератор на канале (разобран выше)</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Пример есть в конспекте, напиши его заново не глядя: создай канал, запусти горутину, которая отправит 1..n и закроет канал (<code>defer close(ch)</code>), и сразу верни канал.</p><p><b>Подвох.</b> Если отправлять без горутины, функция зависнет: в небуферизованный канал некому читать.</p></details></div>
+    <div class="task" data-test="TestSquares"><label><input type="checkbox" id="t61-2"><span><em>Squares</em> — стадия конвейера</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Та же схема, что у Generate: новый канал и горутина. Внутри <code>for v := range in { out &lt;- v * v }</code>, после цикла <code>close(out)</code>.</p><p><b>Подвох.</b> Если забыть закрыть <code>out</code>, читатель будет ждать вечно. Тест в этом случае покажет <code>-999</code>.</p></details></div>
+    <div class="task" data-test="TestSumParallel"><label><input type="checkbox" id="t61-3"><span><em>SumParallel</em> — сумма кусками в горутинах</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Если <code>parts &lt; 1</code>, сделай <code>parts = 1</code>. Размер куска: <code>(len(nums) + parts - 1) / parts</code> (деление с округлением вверх). Иди по срезу шагом <code>size</code>, на каждый кусок запускай горутину, которая отправит сумму в канал. Запомни, сколько горутин запустил, и столько же раз прочитай канал.</p><p><b>Подвох.</b> Последний кусок бывает короче: ограничь правую границу через <code>len(nums)</code>. При пустом срезе <code>size</code> равен 0, и шаг 0 даст бесконечный цикл. Такой случай проверь отдельно.</p></details></div>
+    <div class="task" data-test="TestWithTimeout"><label><input type="checkbox" id="t61-4"><span><em>WithTimeout ★</em> — select + time.After</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Канал с буфером на 1, горутина пишет в него <code>f()</code>. Затем <code>select</code> с двумя <code>case</code>: пришёл результат → <code>v, true</code>; сработал <code>time.After(d)</code> → <code>0, false</code>.</p><p><b>Подвох.</b> Без буфера опоздавшая горутина навсегда застрянет на отправке, потому что читать уже некому.</p></details></div>
+    <div class="run"><code>./course/check.sh 61</code><button type="button">Копировать</button></div>
+  </div>
+</div></section>
+
+<section class="sheet" id="l62"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">6.2 sync: WaitGroup и Mutex</div>
+  <div class="box"><h3>WaitGroup — дождаться группу горутин:</h3>
+<pre><code><span class="k">var</span> wg sync.WaitGroup
+<span class="k">for</span> _, url := <span class="k">range</span> urls {
+    wg.Add(<span class="n">1</span>)                 <span class="c">// +1 к счётчику ДО запуска</span>
+    <span class="k">go</span> <span class="k">func</span>() {
+        <span class="k">defer</span> wg.Done()       <span class="c">// −1 при выходе</span>
+        fetch(url)
+    }()
+}
+wg.Wait()                     <span class="c">// ждём, пока счётчик станет 0</span></code></pre>
+  </div>
+  <div class="box"><h3>Гонка данных и Mutex:</h3>
+    <p>Если две горутины одновременно меняют одну переменную, получается гонка данных: <code>n++</code> на самом деле состоит из трёх шагов (прочитать, прибавить, записать), и часть увеличений теряется. Mutex пропускает к данным только одну горутину за раз:</p>
+<pre><code><span class="k">type</span> Counter <span class="k">struct</span> {
+    mu sync.Mutex
+    n  <span class="k">int</span>
+}
+<span class="k">func</span> (c *Counter) Inc() {
+    c.mu.Lock()
+    <span class="k">defer</span> c.mu.Unlock()
+    c.n++
+}</code></pre>
+    <p>Гонки ищет детектор: <code>go test -race</code>. Проверка домашек раздела 6 запускается с ним.</p>
+  </div>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">6.2 sync: WaitGroup и Mutex</div>
+  <div class="box"><h3>Пул воркеров:</h3>
+    <p>Если запустить горутину на каждую из миллиона задач, можно перегрузить базу или чужой API. Пул ограничивает параллелизм: N воркеров берут задачи из общего канала.</p>
+<pre><code>jobs := make(<span class="k">chan</span> <span class="k">int</span>)
+<span class="k">for</span> <span class="k">range</span> workers {             <span class="c">// запускаем N воркеров</span>
+    wg.Add(<span class="n">1</span>)
+    <span class="k">go</span> <span class="k">func</span>() {
+        <span class="k">defer</span> wg.Done()
+        <span class="k">for</span> j := <span class="k">range</span> jobs { … }  <span class="c">// берут задачи, пока канал не закроют</span>
+    }()
+}
+<span class="k">for</span> _, j := <span class="k">range</span> all { jobs &lt;- j }
+close(jobs)
+wg.Wait()</code></pre>
+  </div>
+  <div class="box"><h3>Когда что использовать:</h3>
+    <ul>
+      <li>передать данные или сигнал между горутинами — канал</li>
+      <li>дождаться завершения группы — <code>sync.WaitGroup</code></li>
+      <li>защитить общее состояние (кэш, счётчик) — <code>sync.Mutex</code></li>
+    </ul>
+  </div>
+  <div class="box hw" data-lesson="62"><h3>Домашка 6.2 <span class="count"></span></h3>
+    <div class="task" data-test="TestViewCounter"><label><input type="checkbox" id="t62-1"><span><em>ViewCounter</em> — счётчик под мьютексом, 1000 горутин</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> В обоих методах: <code>c.mu.Lock()</code>, <code>defer c.mu.Unlock()</code>, потом работа с <code>c.n</code>.</p><p><b>Подвох.</b> <code>Value</code> тоже должен брать блокировку: чтение во время записи — тоже гонка, и <code>-race</code> её найдёт.</p></details></div>
+    <div class="task" data-test="TestFetchAll"><label><input type="checkbox" id="t62-2"><span><em>FetchAll</em> — 10 запросов параллельно, порядок сохранить</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>results := make([]int, len(urls))</code>, <code>WaitGroup</code>. Для каждого url: <code>wg.Add(1)</code> и горутина с <code>defer wg.Done()</code>, внутри <code>results[i] = fetch(url)</code>. В конце <code>wg.Wait()</code>.</p><p><b>Подвох.</b> <code>wg.Add</code> вызывай до <code>go</code>, а не внутри горутины. Иначе <code>Wait</code> может завершиться раньше, чем горутины успеют стартовать.</p></details></div>
+    <div class="task" data-test="TestWorkerPool"><label><input type="checkbox" id="t62-3"><span><em>WorkerPool ★</em> — не больше N горутин одновременно</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Схема из конспекта: канал индексов, <code>workers</code> горутин читают его через <code>range</code> и пишут <code>results[i] = f(jobs[i])</code>. Отправь все индексы, закрой канал, дождись <code>wg.Wait()</code>.</p><p><b>Подвох.</b> Если не закрыть канал, воркеры будут ждать вечно, и <code>Wait</code> не вернётся.</p></details></div>
+    <div class="run"><code>./course/check.sh 62</code><button type="button">Копировать</button></div>
+  </div>
+  <svg class="arrow" viewBox="0 0 120 70" aria-hidden="true"><path d="M8 4 C 20 50, 60 60, 104 54" fill="none" stroke="#e9e9e9" stroke-width="4" stroke-linecap="round"/><path d="M90 42 L106 54 L88 64" fill="none" stroke="#e9e9e9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div></section>
+
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+  <div class="topic">Что дальше</div>
+  <div class="box"><h3>Ты прошёл основы:</h3>
+    <p>Типы, коллекции, условия, циклы, ошибки, функции, указатели, ООП на структурах и интерфейсах, горутины и каналы. Этого хватит, чтобы читать почти любой Go-код.</p>
+    <p>Следующий шаг — веб-сервер на net/http. Им продолжается основной курс «Барахолка» в этом же репозитории: туда перейдут <code>Ad</code> из 5.1 и интерфейсы из 5.2.</p>
+    <p><b>Продолжение курса:</b> <a href="https://claude.ai/artifact/AgJpsZXGF3mxQk1nMxLErN" target="_blank" rel="noopener">Часть 2 — до Junior backend</a> и <a href="https://claude.ai/artifact/Xj4tbixn3d3GwF7W6x4afs" target="_blank" rel="noopener">Часть 3 — до Middle backend</a>. Локально через lyceum: <code>/part2</code> и <code>/part3</code>.</p>
+    <p>Темы для самостоятельного изучения: дженерики (<code>func Max[T cmp.Ordered](a, b T) T</code>), <code>context</code> для отмены операций, пакет <code>testing</code> — тесты к домашкам как раз написаны на нём.</p>
+  </div>
+</div></section>
+
+<footer>Отметки о решённых задачах хранятся только в этом браузере. Настоящий счёт показывает <code>./course/check.sh</code>.</footer>
+</div>
+
+<script>
+(function () {
+  var KEY = "go-course-done";
+  var done = {};
+  try { done = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
+  var boxes = document.querySelectorAll(".hw input[type=checkbox]");
+
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {} }
+  function render() {
+    var total = 0;
+    document.querySelectorAll(".hw").forEach(function (hw) {
+      var inputs = hw.querySelectorAll("input[type=checkbox]");
+      var n = 0;
+      inputs.forEach(function (i) { if (i.checked) n++; });
+      total += n;
+      hw.querySelector(".count").textContent = n + "/" + inputs.length;
+    });
+    document.getElementById("prog").textContent = total + "/" + boxes.length + " задач";
+  }
+  boxes.forEach(function (b) {
+    b.checked = !!done[b.id];
+    b.addEventListener("change", function () { done[b.id] = b.checked; save(); render(); });
+  });
+  document.querySelectorAll(".hw .run button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var code = btn.previousElementSibling;
+      var text = code.textContent;
+      function selectIt() {
+        var r = document.createRange(); r.selectNodeContents(code);
+        var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+        btn.textContent = "Выделено";
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { btn.textContent = "Скопировано"; }, selectIt);
+      } else { selectIt(); }
+      setTimeout(function () { btn.textContent = "Копировать"; }, 1600);
+    });
+  });
+  render();
+})();
+</script>
+
+<script>
+// Редактор домашек: работает, когда конспект открыт через локальный сервер
+// (go run ./course/cmd/lyceum → http://localhost:4001). Иначе показывает, как его включить.
+(function () {
+  var local = /^https?:$/.test(location.protocol) && (location.hostname === "localhost" || location.hostname === "127.0.0.1");
+  var serverReady = local ? fetch("/api/ping").then(function (r) { return r.ok; }, function () { return false; }) : Promise.resolve(false);
+  var dirty = {};
+
+  window.addEventListener("beforeunload", function (e) {
+    for (var k in dirty) if (dirty[k]) { e.preventDefault(); e.returnValue = ""; return; }
+  });
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function insert(ta, text) {
+    ta.focus();
+    if (!document.execCommand || !document.execCommand("insertText", false, text)) {
+      ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, "end");
+      ta.dispatchEvent(new Event("input"));
+    }
+  }
+
+  function keys(ta, onCheck, onSave) {
+    ta.addEventListener("keydown", function (e) {
+      var mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key === "Enter") { e.preventDefault(); onCheck(); return; }
+      if (mod && (e.key === "s" || e.key === "ы")) { e.preventDefault(); onSave(); return; }
+      if (e.key === "Tab" && !e.shiftKey && !mod) { e.preventDefault(); insert(ta, "\t"); return; }
+      if (e.key === "Enter" && !mod && !e.shiftKey) {
+        // сохраняем отступ текущей строки, после { добавляем ещё один
+        var before = ta.value.slice(0, ta.selectionStart);
+        var line = before.slice(before.lastIndexOf("\n") + 1);
+        var indent = (line.match(/^[\t ]*/) || [""])[0];
+        if (/\{\s*$/.test(line)) indent += "\t";
+        e.preventDefault();
+        insert(ta, "\n" + indent);
+      }
+    });
+  }
+
+  function hint(panel) {
+    var h = el("div", "hint");
+    var p1 = el("p", null, "Писать и проверять код прямо здесь можно, когда конспект открыт через локальную проверяющую систему. В корне репозитория запусти:");
+    var c = el("pre"); c.appendChild(el("code", null, "go run ./course/cmd/lyceum"));
+    var p2 = el("p", null, "и открой http://localhost:4001 — там у каждой домашки будет редактор и кнопка «Проверить». Код сохраняется в тот же tasks.go, так что можно переключаться между браузером и VS Code.");
+    h.append(p1, c, p2);
+    panel.appendChild(h);
+  }
+
+  function render(hw, panel, res) {
+    var old = panel.querySelector(".build"); if (old) old.remove();
+    var status = panel.querySelector(".status");
+    hw.querySelectorAll(".task").forEach(function (t) {
+      t.classList.remove("ok", "bad");
+      var f = t.querySelector(".fails"); if (f) f.remove();
+      var v = t.querySelector(".verdict"); if (v) v.remove();
+    });
+    if (res.build_error) {
+      status.textContent = "💥 Не компилируется";
+      var b = el("pre", "build", res.build_error);
+      panel.appendChild(b);
+      return;
+    }
+    var byName = {}; res.tests.forEach(function (r) { byName[r.name] = r; });
+    var ok = 0, all = 0;
+    hw.querySelectorAll(".task").forEach(function (t) {
+      var r = byName[t.dataset.test];
+      if (!r) return;
+      all++;
+      var label = t.querySelector("label span");
+      var v = el("span", "verdict", r.pass ? "засчитано" : "не прошло");
+      label.appendChild(v);
+      if (r.pass) {
+        ok++;
+        t.classList.add("ok");
+        var box = t.querySelector("input");
+        if (!box.checked) { box.checked = true; box.dispatchEvent(new Event("change")); }
+      } else {
+        t.classList.add("bad");
+        if (r.output && r.output.length) {
+          var f = el("pre", "fails", r.output.join("\n"));
+          t.querySelector("label").after(f);
+        }
+      }
+    });
+    status.textContent = (ok === all ? "✅ " : "❌ ") + ok + "/" + all + " засчитано";
+  }
+
+  function editor(hw, panel) {
+    var lesson = hw.dataset.lesson;
+    var ta = el("textarea");
+    ta.id = "code-" + lesson;
+    ta.spellcheck = false;
+    ta.setAttribute("autocapitalize", "off");
+    ta.setAttribute("autocomplete", "off");
+    ta.setAttribute("aria-label", "Код урока " + lesson[0] + "." + lesson[1]);
+    var bar = el("div", "bar");
+    var check = el("button", "primary", "Проверить");
+    check.type = "button";
+    var reload = el("button", null, "Загрузить с диска");
+    reload.type = "button";
+    var status = el("span", "status", "");
+    var keysHint = el("span", null, ""); keysHint.innerHTML = "<kbd>⌘/Ctrl+Enter</kbd> проверить · <kbd>⌘/Ctrl+S</kbd> сохранить";
+    keysHint.style.fontSize = "12px";
+    bar.append(check, reload, status);
+    panel.append(ta, bar, keysHint);
+
+    function load() {
+      status.textContent = "Загружаю…";
+      return fetch("/api/lessons/" + lesson + "/code").then(function (r) { return r.text(); }).then(function (code) {
+        ta.value = code; dirty[lesson] = false; status.textContent = "";
+      }, function () { status.textContent = "Не удалось загрузить файл"; });
+    }
+    function save() {
+      var pos = ta.selectionStart;
+      return fetch("/api/lessons/" + lesson + "/code", { method: "PUT", body: ta.value })
+        .then(function (r) { if (!r.ok) throw new Error(); return r.text(); })
+        .then(function (code) {
+          if (code !== ta.value) { ta.value = code; ta.selectionStart = ta.selectionEnd = Math.min(pos, code.length); }
+          dirty[lesson] = false;
+          status.textContent = "Сохранено";
+        });
+    }
+    function run() {
+      check.disabled = true;
+      status.textContent = "Проверяю…";
+      save().then(function () {
+        return fetch("/api/lessons/" + lesson + "/check", { method: "POST" }).then(function (r) { return r.json(); });
+      }).then(function (res) { render(hw, panel, res); }, function () {
+        status.textContent = "Сервер не ответил — он запущен?";
+      }).then(function () { check.disabled = false; });
+    }
+    ta.addEventListener("input", function () { dirty[lesson] = true; if (status.textContent === "Сохранено") status.textContent = ""; });
+    check.addEventListener("click", run);
+    reload.addEventListener("click", function () {
+      if (dirty[lesson] && !panel.querySelector(".confirm")) {
+        var c = el("button", "confirm", "Точно? Несохранённые правки пропадут");
+        c.type = "button";
+        c.addEventListener("click", function () { c.remove(); load(); });
+        bar.appendChild(c);
+        setTimeout(function () { c.remove(); }, 4000);
+        return;
+      }
+      load();
+    });
+    keys(ta, run, function () { save().catch(function () { status.textContent = "Не удалось сохранить"; }); });
+    load().then(function () { ta.focus(); });
+  }
+
+  document.querySelectorAll(".hw").forEach(function (hw) {
+    var run = hw.querySelector(".run");
+    var btn = el("button", "primary", "Решать здесь");
+    btn.type = "button";
+    run.prepend(btn);
+    var panel = null;
+    btn.addEventListener("click", function () {
+      if (panel) { panel.hidden = !panel.hidden; btn.textContent = panel.hidden ? "Решать здесь" : "Скрыть редактор"; return; }
+      panel = el("div", "ed");
+      hw.appendChild(panel);
+      btn.textContent = "Скрыть редактор";
+      serverReady.then(function (ok) { ok ? editor(hw, panel) : hint(panel); });
+    });
+  });
+})();
+</script>

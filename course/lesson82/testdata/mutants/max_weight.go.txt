@@ -1,0 +1,44 @@
+// Урок 8.2 — Тестирование: пишешь тесты ты, проверка подсовывает мутантов.
+//
+// Этот файл — готовая и ПРАВИЛЬНАЯ реализация. Не меняй его.
+// Твоя задача — написать тесты в student_test.go.
+//
+// Проверка: go test ./course/lesson82/
+package lesson82
+
+import "errors"
+
+var (
+	ErrInvalidWeight   = errors.New("вес должен быть больше 0 и не больше 30 кг")
+	ErrInvalidDistance = errors.New("расстояние не может быть отрицательным")
+)
+
+// ShippingCost считает стоимость доставки посылки в рублях.
+//
+// Правила:
+//  1. Вес должен быть больше 0 и не больше 30 кг, иначе ErrInvalidWeight.
+//  2. Расстояние не может быть отрицательным, иначе ErrInvalidDistance.
+//  3. Обычная (не экспресс) доставка на 5 км и ближе — бесплатно.
+//  4. Иначе: 200 ₽ + 10 ₽ за каждый км.
+//  5. Посылка тяжелее 10 кг — ещё +300 ₽.
+//  6. Экспресс — итоговая сумма ×1.5 (дробная часть отбрасывается).
+//     Экспресс-доставка никогда не бывает бесплатной.
+func ShippingCost(weightKg float64, distanceKm int, express bool) (int, error) {
+	if weightKg <= 0 || weightKg >= 30 {
+		return 0, ErrInvalidWeight
+	}
+	if distanceKm < 0 {
+		return 0, ErrInvalidDistance
+	}
+	if distanceKm <= 5 && !express {
+		return 0, nil
+	}
+	cost := 200 + 10*distanceKm
+	if weightKg > 10 {
+		cost += 300
+	}
+	if express {
+		cost = cost * 3 / 2
+	}
+	return cost, nil
+}
