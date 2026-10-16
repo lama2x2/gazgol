@@ -1,0 +1,1287 @@
+<title>Python собес: бэкенд</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Лист за листом, как в PDF-конспекте: серая шапка с номером, рамка с темой, блоки с понятиями. Одна тёмная тема — осознанно. */
+:root {
+  --ink: #0f0f10;        /* фон страницы */
+  --sheet: #000;         /* фон листа */
+  --rule: #e9e9e9;       /* белые рамки */
+  --cap: #9a9a9a;        /* серая шапка листа */
+  --text: #f2f2f2;
+  --mute: #a3a3a3;
+  --go: #ffd43b;         /* жёлтый Python: ключевые слова, акценты */
+  --str: #9fd39a;        /* строки в коде */
+  --num: #8fc1ef;        /* числа в коде */
+  --com: #7b7b7b;        /* комментарии */
+  --ok: #7ad48b;
+  --py: #6ea8de;         /* синий Python: блоки «как спрашивают» */
+  --display: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ink); color: var(--text); font-family: var(--display); font-weight: 500; line-height: 1.45; padding-inline: 16px; padding-block: 0 64px; }
+a { color: var(--go); }
+.wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+
+/* обложка */
+.cover { min-height: 340px; display: grid; place-items: center; text-align: center; padding-block: 48px 8px; }
+.cover-frame { border: 18px solid var(--cap); border-radius: 36px; padding: 6px; box-shadow: 0 0 40px rgba(255,255,255,.12); }
+.cover-inner { background: var(--sheet); border-radius: 20px; padding: 28px 44px; }
+.cover h1 { margin: 0; font-weight: 900; font-size: clamp(34px, 8vw, 58px); letter-spacing: .02em; text-transform: uppercase; line-height: 1; }
+.cover p { margin: 18px 0 0; color: var(--mute); font-size: 15px; max-width: 44ch; }
+
+/* оглавление */
+nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--ink); padding-block: 10px; border-bottom: 1px solid #262626; display: flex; gap: 8px; flex-wrap: wrap; }
+nav.toc a { text-decoration: none; color: var(--text); border: 1.5px solid var(--rule); border-radius: 8px; padding: 5px 10px; font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--text); color: var(--sheet); outline: none; }
+nav.toc .prog { margin-left: auto; color: var(--mute); font-size: 13px; align-self: center; }
+
+/* разделитель раздела */
+.part { display: flex; align-items: baseline; gap: 14px; padding-top: 24px; }
+.part b { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--go); }
+.part h2 { margin: 0; font-weight: 900; font-size: clamp(22px, 5vw, 30px); text-wrap: balance; }
+
+/* лист */
+.sheet { counter-increment: sheet; background: var(--sheet); border-radius: 4px; overflow: hidden; scroll-margin-top: 64px; }
+.sheet-cap { background: var(--cap); height: 44px; display: flex; justify-content: flex-end; align-items: center; padding-inline: 16px; }
+.sheet-cap::after { content: counter(sheet); background: var(--sheet); color: var(--text); border-radius: 7px; padding: 1px 16px; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.sheet-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.topic { border: 2px solid var(--rule); padding: 8px 12px; text-align: center; font-weight: 800; font-size: clamp(16px, 3.6vw, 20px); text-wrap: balance; line-height: 1.25; }
+.box { border: 2px solid var(--rule); padding: 12px 14px; min-width: 0; }
+.box > h3 { margin: 0 0 10px; font-size: 17px; font-weight: 800; }
+.box p { margin: 0 0 10px; max-width: 68ch; }
+.box p:last-child, .box ul:last-child, .box pre:last-child { margin-bottom: 0; }
+.box ul { margin: 0 0 10px; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.box li::before { content: "•"; margin-right: 6px; }
+code, pre, textarea { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+code { font-family: var(--mono); font-size: .9em; color: var(--go); }
+pre { margin: 0 0 10px; background: #111; border-left: 3px solid #333; padding: 10px 12px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.55; color: var(--text); }
+pre code { color: inherit; font-size: inherit; }
+.k { color: var(--go); } .s { color: var(--str); } .n { color: var(--num); } .c { color: var(--com); font-style: italic; }
+
+/* как в Python */
+.box.py { border-color: var(--py); border-style: dashed; }
+.box.py > h3 { color: var(--py); }
+.cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cmp > div { min-width: 0; }
+.cmp small { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); margin-bottom: 4px; }
+@media (max-width: 560px) { .cmp { grid-template-columns: 1fr; } }
+
+/* разбор и домашка */
+.box.solve > h3::before { content: "Разбор · "; color: var(--mute); font-weight: 700; }
+.hw { background: var(--text); color: var(--sheet); border: none; }
+.hw > h3 { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.hw .count { font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 700; }
+.hw .task { border-top: 1px solid #d0d0d0; padding: 6px 0; }
+.hw h3 + .task { border-top: none; }
+.hw label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.hw details { margin: 4px 0 2px 28px; font-size: 14px; }
+.hw summary { cursor: pointer; font-weight: 700; font-size: 13px; color: #444; width: fit-content; }
+.hw summary:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+.hw details p { margin: 6px 0 0; max-width: 64ch; }
+.hw details code { color: #2b5b84; font-weight: 600; }
+.hw input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: #111; flex: none; }
+.hw input:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+.hw label span { flex: 1; min-width: 0; }
+.hw label em { font-style: normal; font-family: var(--mono); font-size: 13px; font-weight: 600; }
+.hw label:has(input:checked) span { text-decoration: line-through; opacity: .55; }
+.hw .run { margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.hw .run code { background: var(--sheet); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; overflow-x: auto; max-width: 100%; }
+.hw button { font: inherit; font-size: 13px; font-weight: 700; border: 2px solid var(--sheet); background: transparent; border-radius: 6px; padding: 4px 10px; cursor: pointer; color: var(--sheet); }
+.hw button:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+
+.arrow { display: block; margin: 4px 0 0 auto; width: 120px; height: 70px; opacity: .85; }
+footer { color: var(--mute); font-size: 13px; text-align: center; padding-top: 16px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+/* редактор кода (работает при запуске через python3 pycourse/lyceum.py) */
+.hw button.primary { background: var(--sheet); color: var(--text); }
+.ed { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.ed textarea { width: 100%; min-height: 460px; resize: vertical; background: #0d0d0d; color: var(--text); caret-color: var(--go); font-family: var(--mono); font-size: 13.5px; line-height: 1.55; tab-size: 4; border: 2px solid var(--sheet); border-radius: 6px; padding: 10px 12px; white-space: pre; overflow: auto; }
+.ed textarea:focus-visible { outline: 2px solid var(--go); outline-offset: 1px; }
+.ed .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ed .status { font-size: 14px; font-weight: 800; }
+.ed .build { margin: 0; background: #2b1111; color: #ffc2c2; border-left-color: #a33; white-space: pre-wrap; font-size: 12.5px; }
+.ed .hint p { margin: 0 0 6px; }
+.ed kbd { font-family: var(--mono); font-size: 12px; border: 1px solid #999; border-radius: 4px; padding: 0 4px; }
+.task .fails { margin: 4px 0 0 28px; padding: 6px 8px; background: #fbe9e9; border-left: 3px solid #b3261e; font-family: var(--mono); font-size: 12.5px; color: #8a1c14; white-space: pre-wrap; overflow-x: auto; }
+.task.bad input { outline: 2px solid #b3261e; outline-offset: 1px; }
+.task .verdict { font-size: 12px; font-weight: 800; margin-left: 6px; text-decoration: none; display: inline-block; }
+.task.ok .verdict { color: #1d7a34; }
+.task.bad .verdict { color: #b3261e; }
+/* ---------- части 2 и 3: навигация между частями ---------- */
+.parts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; padding-top: 18px; }
+.parts a { color: var(--mute); text-decoration: none; font-weight: 700; font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1.5px solid #333; }
+.parts a[aria-current="page"] { color: var(--sheet); background: var(--text); border-color: var(--text); }
+.parts a:hover, .parts a:focus-visible { border-color: var(--text); color: var(--text); outline: none; }
+.parts a[aria-current="page"]:hover { color: var(--sheet); }
+.cover .level { display: inline-block; margin-top: 14px; font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--go); }
+nav.toc a.mod { border-style: dashed; }
+
+/* таблица, цитата, второстепенный текст */
+.box table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 0 0 10px; }
+.box th, .box td { border: 1px solid #3a3a3a; padding: 5px 8px; text-align: left; vertical-align: top; }
+.box th { background: #161616; font-weight: 800; }
+.tbl { overflow-x: auto; }
+.box ol { margin: 0 0 10px; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
+.box blockquote { margin: 0 0 10px; padding: 6px 12px; border-left: 3px solid var(--go); color: #d6d6d6; }
+.box .sm { font-size: 13px; color: var(--mute); }
+.box.warn { border-color: #e38b5b; }
+.box.warn > h3 { color: #e38b5b; }
+
+/* ---------- тренажёры ---------- */
+.quiz { border-color: var(--go); border-style: solid; }
+.quiz > h3 { display: flex; flex-direction: column; gap: 6px; }
+.qkind { align-self: flex-start; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 800; color: var(--sheet); background: var(--go); padding: 2px 8px; border-radius: 4px; }
+.quiz[data-kind="bug"] { border-color: #e38b5b; } .quiz[data-kind="bug"] .qkind { background: #e38b5b; }
+.quiz[data-kind="open"], .quiz[data-kind="design"], .quiz[data-kind="review"] { border-color: #b59cf5; }
+.quiz[data-kind="open"] .qkind, .quiz[data-kind="design"] .qkind, .quiz[data-kind="review"] .qkind { background: #b59cf5; }
+.quiz .tag { font-size: 11px; font-weight: 700; color: var(--mute); margin-left: 6px; letter-spacing: .06em; }
+.quiz textarea { width: 100%; min-height: 72px; resize: vertical; background: #0d0d0d; color: var(--text); border: 1.5px solid #444; border-radius: 6px; padding: 8px 10px; font: 14px/1.5 var(--mono); }
+.quiz textarea.prose { font-family: var(--display); font-size: 15px; min-height: 110px; }
+.quiz textarea:focus-visible { outline: 2px solid var(--go); outline-offset: 1px; }
+.qopts { display: flex; flex-direction: column; gap: 6px; margin: 0 0 10px; }
+.qopts label { display: flex; gap: 10px; align-items: flex-start; padding: 7px 10px; border: 1.5px solid #333; border-radius: 6px; cursor: pointer; }
+.qopts label:hover { border-color: #666; }
+.qopts input { margin: 3px 0 0; accent-color: var(--go); flex: none; width: 16px; height: 16px; }
+.qopts label.right { border-color: var(--ok); background: rgba(122, 212, 139, .08); }
+.qopts label.wrong { border-color: #e06c6c; background: rgba(224, 108, 108, .08); }
+.qbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+.quiz button { font: inherit; font-size: 13px; font-weight: 700; border: 2px solid var(--rule); background: transparent; color: var(--text); border-radius: 6px; padding: 4px 12px; cursor: pointer; }
+.quiz button.primary { background: var(--text); color: var(--sheet); }
+.quiz button:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+.qres { font-size: 14px; font-weight: 800; }
+.qres.ok { color: var(--ok); } .qres.no { color: #e06c6c; } .qres.peek { color: var(--mute); }
+.qans { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #444; }
+.qans > b { display: block; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); margin-bottom: 6px; }
+.qpoints { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 10px; }
+.qpoints label { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.qpoints input { margin-top: 3px; accent-color: var(--ok); flex: none; }
+.quiz.solved { border-color: var(--ok); }
+.quiz.solved .qkind { background: var(--ok); }
+
+/* ---------- проект ---------- */
+.box.project { border: 2px solid var(--go); background: linear-gradient(180deg, rgba(255,212,59,.07), transparent 60%); }
+.box.project > h3::before { content: "Проект · "; color: var(--go); }
+.box.review-list li::before { content: "☐"; margin-right: 8px; color: var(--mute); }
+
+/* ---------- повторение перед собесом ---------- */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.cards a { display: block; padding: 8px 10px; border: 1.5px solid #333; border-radius: 6px; color: var(--text); text-decoration: none; font-size: 14px; }
+.cards a small { display: block; color: var(--mute); font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+.cards a:hover, .cards a:focus-visible { border-color: var(--go); outline: none; }
+.cards a.done { border-color: var(--ok); }
+
+pre { tab-size: 4; }
+.part b { white-space: nowrap; }
+
+/* Python-курс: источники и цифры */
+.box.src a { word-break: break-word; }
+.stat { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 0 0 10px; }
+.stat div { border: 1.5px solid #333; border-radius: 6px; padding: 8px 10px; }
+.stat b { display: block; font-size: 22px; font-weight: 900; color: var(--go); }
+.stat small { color: var(--mute); font-size: 12px; }
+.box ol li::before { content: none; }
+
+</style>
+
+<div class="wrap" data-part="3">
+<nav class="parts" aria-label="Части курса"><a data-local="/" data-remote="https://claude.ai/artifact/QMUd6PvLPGnbQJnutDPWvS">Часть 1 · Язык</a><a data-local="/part2" data-remote="https://claude.ai/artifact/Q9kqNNUqhgNUCob6uyiyuY">Часть 2 · Алгоритмы</a><a aria-current="page" data-local="/part3" data-remote="https://claude.ai/artifact/SpUd2BLD8FQLgZkmanYafU" href="#">Часть 3 · Бэкенд</a></nav>
+<header class="cover">
+  <div>
+    <div class="cover-frame"><div class="cover-inner"><h1>Бэкенд</h1></div></div>
+    <span class="level">Часть 3 · практика, БД, веб, system design</span>
+    <p>Практический лайвкод «как в продакшене», бизнес-логика и код-ревью, SQL и устройство баз данных, HTTP и фреймворки, очереди и кэши, system design и поведенческое интервью.</p>
+  </div>
+</header>
+<nav class="toc" aria-label="Уроки"><a href="#l111">11.1</a><a href="#l112">11.2</a><a href="#l113">11.3</a><a href="#l121">12.1</a><a href="#l122">12.2</a><a href="#l131">13.1</a><a href="#l132">13.2</a><a href="#l141">14.1</a><a href="#l142">14.2</a><a href="#review" class="mod">Собес</a><span class="prog" id="prog"></span></nav>
+
+<div class="part" id="m11"><b>Модуль 11</b><h2>Практический лайвкод</h2></div>
+<section class="sheet" id="l111"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">11.1 Задачи «как в продакшене»</div>
+<div class="box"><h3>Чем практический лайвкод отличается от алгоритмического:</h3><p>На платформенной секции (Авито, Ozon, Kaspersky, Т-Банк) часто дают не LeetCode, а маленькую рабочую задачу: кэш, разбор логов, синхронизация данных, ретраи. Алгоритм там обычно простой. Оценивают:</p>
+<ul><li><b>понимание требований</b>: какие данные, сколько их, что делать с ошибками, нужна ли потокобезопасность</li><li><b>идиоматичный Python</b>: <code>collections</code>, генераторы, контекстные менеджеры, <code>dataclass</code>, аннотации</li><li><b>инженерные вопросы</b>: память на больших данных, сложность, граничные случаи, тестируемость (время и случайность — параметрами)</li><li><b>развитие решения</b>: «а если данных в 100 раз больше?», «а если из нескольких потоков?», «а если упадёт посередине?»</li></ul></div>
+<div class="box py"><h3>Как отвечать на «а если…»</h3><p>Не переписывай молча. Сначала назови, что сломается («Counter не влезет в память», «два потока одновременно пройдут проверку»), потом — варианты с компромиссами («разбить по хешу на файлы — точно, но медленно; Count-Min Sketch — приближённо и в фиксированной памяти»), потом спроси, что важнее. Это и есть сигнал middle+.</p></div>
+<div class="box"><h3>LRU-кэш — самая частая задача этого типа:</h3><pre><code><span class="k">from</span> collections <span class="k">import</span> OrderedDict
+
+<span class="k">class</span> LRUCache:
+    <span class="k">def</span> __init__(<span class="k">self</span>, capacity):
+        <span class="k">self</span>.capacity = capacity
+        <span class="k">self</span>.data = OrderedDict()
+
+    <span class="k">def</span> get(<span class="k">self</span>, key, default=<span class="k">None</span>):
+        <span class="k">if</span> key <span class="k">not</span> <span class="k">in</span> <span class="k">self</span>.data:
+            <span class="k">return</span> default
+        <span class="k">self</span>.data.move_to_end(key)            <span class="c"># стал самым свежим</span>
+        <span class="k">return</span> <span class="k">self</span>.data[key]
+
+    <span class="k">def</span> put(<span class="k">self</span>, key, value):
+        <span class="k">self</span>.data[key] = value
+        <span class="k">self</span>.data.move_to_end(key)
+        <span class="k">if</span> len(<span class="k">self</span>.data) &gt; <span class="k">self</span>.capacity:
+            <span class="k">self</span>.data.popitem(last=<span class="k">False</span>)     <span class="c"># выкинуть самый старый</span></code></pre>
+<p>Следующие вопросы интервьюера: «без <code>OrderedDict</code>» (словарь + двусвязный список, урок 8.2), «с TTL», «потокобезопасно» (<code>threading.Lock</code> вокруг операций), «чем <code>functools.lru_cache</code> отличается» (кэширует функцию по аргументам, без TTL, есть <code>cache_info</code>).</p></div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">11.1 Задачи «как в продакшене»</div>
+<div class="box solve"><h3>Синхронизация с «плохим» API (задача с собесов middle)</h3><p>«Раз в час скачиваем JSON из 100 000+ объектов с первичным ключом. Нужно создать новые записи, обновить изменившиеся и пометить удалёнными те, которых нет в выгрузке».</p>
+<p>*«Наивно — запрос в БД на каждую запись: 100 000 запросов. Лучше построить два словаря "id → данные": из выгрузки и из базы (или батчами по 1000 id), — и посчитать три множества: <code>api - db</code> создать, <code>db - api</code> удалить, пересечение с отличающимися данными — обновить. Это O(n). Запись — пакетно: <code>executemany</code>, <code>INSERT … ON CONFLICT DO UPDATE</code>, или загрузка во временную таблицу и три SQL-запроса. Если выгрузка не влезает в память — стримить JSON (ijson) и сравнивать батчами, отсортированными по id».*</p>
+<pre><code><span class="k">def</span> sync_diff(db: dict, api: dict):
+    db_ids, api_ids = db.keys(), api.keys()
+    create = sorted(api_ids - db_ids)
+    delete = sorted(db_ids - api_ids)
+    update = sorted(k <span class="k">for</span> k <span class="k">in</span> api_ids &amp; db_ids <span class="k">if</span> api[k] != db[k])
+    <span class="k">return</span> create, update, delete</code></pre>
+<p><code>dict.keys()</code> поддерживает операции множеств — это часто забывают.</p></div>
+<div class="box quiz" id="q111-1" data-id="q111-1" data-kind="choice">
+<h3><span class="qkind">Выбери</span><span>Тебя просят посчитать p95 времени ответа по логу. Что верно?<span class="tag">· частый вопрос на собесе</span></span></h3>
+
+<div class="qopts" role="group">
+<label data-correct="0"><input type="radio" name="q111-1" id="q111-1-o0"><span>p95 — это среднее, умноженное на 0.95</span></label>
+<label data-correct="1"><input type="radio" name="q111-1" id="q111-1-o1"><span>p95 — значение, ниже которого 95% наблюдений; его считают по отсортированным значениям (или приближённо — гистограммой или t-digest на потоке), а усреднять p95 разных серверов нельзя</span></label>
+<label data-correct="0"><input type="radio" name="q111-1" id="q111-1-o2"><span>p95 всегда меньше среднего</span></label>
+<label data-correct="0"><input type="radio" name="q111-1" id="q111-1-o3"><span>p95 считают как максимум за 95 секунд</span></label>
+</div>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Почему</b><p>Перцентили — основная метрика задержек: среднее прячет хвосты. Точный p95 требует хранить или сортировать значения; в мониторинге используют гистограммы (Prometheus <code>histogram_quantile</code>) или t-digest. Среднее p95 по нескольким серверам — не p95 всего трафика; правильно сливать гистограммы.</p></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">11.1 Задачи «как в продакшене»</div>
+<div class="box hw" data-lesson="111"><h3>Домашка 11.1 <span class="count"></span></h3>
+<div class="task" data-test="test_lru_cache"><label><input type="checkbox" id="t111-1"><span><code>LRUCache</code> — кэш с вытеснением давно не использованного, <code>get</code>/<code>put</code> за O(1)</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>OrderedDict</code> и <code>move_to_end</code>, как в разборе. Размер не больше <code>capacity</code>.</p><p><b>Подвох.</b> <code>put</code> существующего ключа обновляет значение и делает ключ свежим, не увеличивая размер. <code>get</code> отсутствующего не должен ничего менять.</p></details></div>
+<div class="task" data-test="test_ttl_cache"><label><input type="checkbox" id="t111-2"><span><code>TTLCache</code> — кэш, где запись живёт <code>ttl</code> секунд; часы — параметром</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Храни <code>key → (value, expires_at)</code>. <code>get</code>: запись есть и <code>clock() &lt; expires_at</code> — вернуть, иначе удалить и вернуть <code>default</code>. <code>set</code> перезаписывает срок. <code>__len__</code> считает только живые записи — перед подсчётом вычисти просроченные.</p><p><b>Подвох.</b> Не запускай фоновый поток для очистки: ленивое удаление при обращении проще и тестируемо. Сравнение со временем — строгое: в момент <code>expires_at</code> запись уже мертва.</p></details></div>
+<div class="task" data-test="test_sync_diff"><label><input type="checkbox" id="t111-3"><span><code>sync_diff</code> — что создать, обновить и удалить при синхронизации базы с выгрузкой API</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Операции множеств над <code>keys()</code>, как в разборе. Верни <code>(create, update, delete)</code> — три отсортированных списка id.</p><p><b>Подвох.</b> Сравнение «изменилось» — по значениям словарей целиком. Тест на 200 000 записей: вложенный поиск по спискам не уложится.</p></details></div>
+<div class="task" data-test="test_flatten_json"><label><input type="checkbox" id="t111-4"><span><code>flatten_json</code> — развернуть вложенный JSON в плоский словарь с ключами через точку, индексы списков — числами</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Рекурсивная функция <code>walk(prefix, value)</code>: для словаря — <code>walk(f&quot;{prefix}.{k}&quot; if prefix else k, v)</code>, для списка — то же с индексом, иначе <code>out[prefix] = value</code>. Пустые <code>{}</code> и <code>[]</code> сохраняй как значения.</p><p><b>Подвох.</b> Корень-скаляр: <code>flatten_json(5)</code> → <code>{&quot;&quot;: 5}</code>. Ключи словарей — строки, но могут содержать цифры — это не индексы.</p></details></div>
+<div class="task" data-test="test_endpoint_stats"><label><input type="checkbox" id="t111-5"><span><code>endpoint_stats ★</code> — по строкам лога посчитать для каждого эндпоинта число запросов, долю ошибок 5xx и p95 времени ответа</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Строка: <code>&quot;2026-10-14T10:00:00 GET /api/users 200 12ms&quot;</code>. Ключ — <code>(метод, путь)</code>. Собери времена в списки, ошибки — счётчиком. p95 по методу nearest-rank: отсортируй, индекс <code>ceil(0.95 * n) - 1</code>. Доля ошибок округляется до 3 знаков.</p><p><b>Подвох.</b> Битые строки пропускай. Путь с query-строкой (<code>/api/users?page=2</code>) относится к пути без неё. Тест проверяет p95 на 1, 20 и 100 значениях.</p></details></div>
+<div class="run"><code>python3 pycourse/check.py 111</code><button type="button" class="copy">Копировать</button></div></div>
+<div class="box"><h3>Вопросы с собеседования по уроку:</h3></div>
+<div class="box quiz" id="q111-2" data-id="q111-2" data-kind="open">
+<h3><span class="qkind">Вопрос с собеса</span><span>Как бы ты сделал кэш для сервиса, который ходит в медленное внешнее API? Какие вопросы надо решить?</span></h3>
+
+<textarea id="in-q111-2" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>Сначала требования: насколько свежими должны быть данные (TTL), объём и число ключей (память, вытеснение — LRU/LFU), один процесс или много (локальный кэш в памяти против общего Redis), допустимы ли устаревшие данные при недоступности API. Устройство: cache-aside — читаем кэш, при промахе идём в API и кладём результат с TTL. Проблемы и решения: <b>cache stampede</b> — когда горячий ключ истёк, тысяча запросов одновременно идёт в API; лечится блокировкой или singleflight («один загружает, остальные ждут»), ранним фоновым обновлением, случайным разбросом TTL. <b>Инвалидация</b> — по событию об изменении или по TTL. <b>Отрицательное кэширование</b> — кэшировать «не найдено» на короткое время. <b>Отказ API</b> — отдавать устаревшее значение (stale-while-revalidate), circuit breaker. <b>Двухуровневый кэш</b>: локальный LRU плюс Redis. Метрики: hit rate, задержки, размер. Сериализация и размер значений в Redis, а ключи — с версией схемы, чтобы безопасно выкатывать изменения формата.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q111-2-p0"><span>требования: свежесть, объём, один или много процессов</span></label><label><input type="checkbox" id="q111-2-p1"><span>cache-aside и TTL, вытеснение LRU</span></label><label><input type="checkbox" id="q111-2-p2"><span>stampede и singleflight, разброс TTL</span></label><label><input type="checkbox" id="q111-2-p3"><span>инвалидация и отрицательное кэширование</span></label><label><input type="checkbox" id="q111-2-p4"><span>поведение при отказе API: stale, circuit breaker</span></label><label><input type="checkbox" id="q111-2-p5"><span>метрики hit rate и версия ключей</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<section class="sheet" id="l112"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">11.2 Бизнес-логика: банкомат, уведомления, бронирование</div>
+<div class="box"><h3>Формат:</h3><p>Яндекс на Python-позициях часто даёт не алгоритм, а <b>бизнес-задачу</b>: банкомат, заказ такси, фильтр уведомлений, бронирование. Оценивают чистоту кода, обработку ошибок и то, как кандидат рассуждает. Типичный провал из реального отзыва: потратить 20 минут на модели данных и не дойти до логики фильтра.</p></div>
+<div class="box"><h3>План на такую задачу:</h3><ol><li><b>Сценарии и инварианты</b> (3–5 минут): что система должна делать, что запрещено («нельзя выдать больше, чем есть в кассетах», «бронь не пересекается с другой»), что при ошибке</li><li><b>Минимальная модель</b>: <code>dataclass</code> для сущностей, <code>Enum</code> для статусов, один класс-сервис с публичными методами. Не строй иерархии «на будущее»</li><li><b>Ядро логики</b> — сначала счастливый путь, затем ошибки. Ошибки — <b>своими исключениями</b>, а не <code>return False</code></li><li><b>Атомарность</b>: если операция не удалась, состояние не меняется (сначала вычисли, потом применяй)</li><li><b>Тестируемость</b>: время, случайность, хранилища — параметрами</li><li><b>Расширения вслух</b>: конкурентный доступ (блокировки, транзакции в БД), персистентность, масштабирование</li></ol></div>
+<div class="box solve"><h3>Конечный автомат статусов заказа</h3><p>Половина бизнес-задач — про допустимые переходы. Таблица переходов вместо россыпи <code>if</code>:</p>
+<pre><code><span class="k">from</span> enum <span class="k">import</span> Enum
+
+<span class="k">class</span> Status(Enum):
+    CREATED = <span class="s">&quot;created&quot;</span>
+    PAID = <span class="s">&quot;paid&quot;</span>
+    SHIPPED = <span class="s">&quot;shipped&quot;</span>
+    DELIVERED = <span class="s">&quot;delivered&quot;</span>
+    CANCELLED = <span class="s">&quot;cancelled&quot;</span>
+
+TRANSITIONS = {
+    Status.CREATED: {Status.PAID, Status.CANCELLED},
+    Status.PAID: {Status.SHIPPED, Status.CANCELLED},
+    Status.SHIPPED: {Status.DELIVERED},
+}
+
+<span class="k">class</span> InvalidTransition(Exception):
+    <span class="k">pass</span>
+
+<span class="k">def</span> move(current: Status, new: Status) -&gt; Status:
+    <span class="k">if</span> new <span class="k">not</span> <span class="k">in</span> TRANSITIONS.get(current, set()):
+        <span class="k">raise</span> InvalidTransition(<span class="s">f&quot;{current.value} → {new.value}&quot;</span>)
+    <span class="k">return</span> new</code></pre>
+<p>Новый статус добавляется правкой таблицы, а не кода. Ту же таблицу можно отрисовать для документации и проверить тестом, что из каждого статуса достижим финальный.</p></div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">11.2 Бизнес-логика: банкомат, уведомления, бронирование</div>
+<div class="box"><h3>Банкомат и почему жадность ломается:</h3><p>Выдать сумму минимальным числом купюр, если купюр <b>ограниченное</b> количество. Жадно «берём крупную, пока можно» неверно: в кассетах 50 × 1 и 20 × 3, сумма 60. Жадно — взяли 50, осталось 10, выдать нельзя. А 20 + 20 + 20 — можно. Решение — перебор от крупных номиналов с откатом (номиналов мало, перебор быстрый) или динамика по сумме.</p></div>
+<div class="box quiz" id="q112-1" data-id="q112-1" data-kind="choice">
+<h3><span class="qkind">Выбери</span><span>В <code>withdraw</code> банкомат посчитал, какие купюры выдать, но при выдаче второй кассеты случилась ошибка. Как должна быть устроена операция?<span class="tag">· частый вопрос на собесе</span></span></h3>
+
+<div class="qopts" role="group">
+<label data-correct="0"><input type="radio" name="q112-1" id="q112-1-o0"><span>уменьшать остатки в кассетах по мере подбора купюр</span></label>
+<label data-correct="1"><input type="radio" name="q112-1" id="q112-1-o1"><span>сначала полностью вычислить план выдачи, не трогая состояние; применить его целиком, только если план найден; при сбое применения — откатить</span></label>
+<label data-correct="0"><input type="radio" name="q112-1" id="q112-1-o2"><span>записать ошибку в лог и продолжить</span></label>
+<label data-correct="0"><input type="radio" name="q112-1" id="q112-1-o3"><span>вернуть пользователю частичную сумму</span></label>
+</div>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Почему</b><p>Это атомарность на уровне объекта: «вычислить, потом применить». В реальной системе применение — транзакция в БД, а физическая выдача — отдельный шаг с компенсацией (если купюры не вышли, вернуть остатки и отменить списание). Интервьюер ждёт, что ты сам заговоришь о том, что будет при сбое посередине.</p></div>
+</div>
+<div class="box"><h3>Фильтр уведомлений (задача из реального собеса Яндекса):</h3><p>«Уведомление: id, тип (EMAIL/SMS/PUSH), получатель, отправитель, текст. Применить настройки получателя (разрешённые каналы, заблокированные отправители) и не отправлять дубликаты за 24 часа». Хранилище не нужно — только контракты и логика. Ждут работающий фильтр с тремя проверками. Ключ дедупликации — <code>(получатель, канал, текст)</code>; окно — по времени отправки, часы передаются параметром.</p></div>
+<div class="box quiz" id="q112-2" data-id="q112-2" data-kind="review">
+<h3><span class="qkind">Код-ревью</span><span>Сделай код-ревью сервиса бронирования переговорок:<span class="tag">· частый вопрос на собесе</span></span></h3>
+<pre><code>bookings = []
+
+<span class="k">def</span> book(room, start, end, user):
+    <span class="k">for</span> b <span class="k">in</span> bookings:
+        <span class="k">if</span> b[<span class="s">&quot;room&quot;</span>] == room <span class="k">and</span> b[<span class="s">&quot;start&quot;</span>] &lt; end <span class="k">and</span> start &lt; b[<span class="s">&quot;end&quot;</span>]:
+            <span class="k">return</span> <span class="s">&quot;занято&quot;</span>
+    bookings.append({<span class="s">&quot;room&quot;</span>: room, <span class="s">&quot;start&quot;</span>: start, <span class="s">&quot;end&quot;</span>: end, <span class="s">&quot;user&quot;</span>: user})
+    <span class="k">return</span> <span class="s">&quot;ok&quot;</span></code></pre>
+<textarea id="in-q112-2" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><ul><li><b>глобальное изменяемое состояние</b> — модульный список: нельзя иметь два независимых экземпляра, тесты влияют друг на друга. Класс-сервис с хранилищем, переданным в конструктор</li><li><b>нет валидации</b>: <code>start &gt;= end</code>, бронь в прошлом, неизвестная комната</li><li><b>ошибки строками</b> («занято»/«ok»): вызывающий код должен сравнивать строки. Свои исключения: <code>RoomBusy</code>, <code>InvalidInterval</code></li><li><b>O(n) по всем броням всех комнат</b> на каждое бронирование → словарь «комната → отсортированный список», <code>bisect</code> для поиска соседей — O(log n)</li><li><b>гонка</b>: два параллельных запроса оба пройдут проверку и забронируют одно время → блокировка на комнату в памяти; в БД — <code>EXCLUDE</code>-ограничение PostgreSQL по диапазону времени или <code>SELECT … FOR UPDATE</code></li><li><b>словари вместо модели</b> → <code>dataclass(frozen=True) Booking</code>; нет id брони, а значит, нельзя отменить</li><li><b>время</b>: часовые пояса (хранить в UTC, <code>datetime</code> с tzinfo)</li><li>проверка пересечения <code>b.start &lt; end and start &lt; b.end</code> правильная (полуинтервалы), её стоит оставить и покрыть тестами на касание</li></ul><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q112-2-p0"><span>глобальное состояние и тестируемость</span></label><label><input type="checkbox" id="q112-2-p1"><span>валидация интервала</span></label><label><input type="checkbox" id="q112-2-p2"><span>исключения вместо строк</span></label><label><input type="checkbox" id="q112-2-p3"><span>сложность и структура по комнатам с bisect</span></label><label><input type="checkbox" id="q112-2-p4"><span>гонка при параллельных запросах и ограничение в БД</span></label><label><input type="checkbox" id="q112-2-p5"><span>модель данных, id, часовые пояса</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">11.2 Бизнес-логика: банкомат, уведомления, бронирование</div>
+<div class="box hw" data-lesson="112"><h3>Домашка 11.2 <span class="count"></span></h3>
+<div class="task" data-test="test_order_fsm"><label><input type="checkbox" id="t112-1"><span><code>OrderFSM</code> — автомат статусов заказа по таблице переходов; история переходов</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Возьми таблицу из разбора. <code>OrderFSM()</code> начинает в <code>CREATED</code>, <code>move(new)</code> проверяет переход и добавляет <code>(old, new)</code> в <code>history</code>; <code>can(new)</code> — проверка без изменения.</p><p><b>Подвох.</b> Недопустимый переход — <code>InvalidTransition</code>, и статус не меняется. Из <code>DELIVERED</code> и <code>CANCELLED</code> никуда нельзя.</p></details></div>
+<div class="task" data-test="test_notification_filter"><label><input type="checkbox" id="t112-2"><span><code>NotificationFilter</code> — разрешённые каналы, заблокированные отправители и дедупликация за 24 часа</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>set_prefs(user, channels, blocked)</code> сохраняет настройки (по умолчанию все каналы разрешены, никто не заблокирован). <code>should_send(n)</code> проверяет три правила по порядку; если отправка разрешена — запоминает время по ключу <code>(recipient, channel, text)</code> и возвращает <code>True</code>.</p><p><b>Подвох.</b> Дубликат — только если прошлая <b>отправленная</b> копия моложе 24 часов (86 400 с); отклонённые уведомления окно не продлевают. Время — из <code>clock()</code>.</p></details></div>
+<div class="task" data-test="test_room_booking"><label><input type="checkbox" id="t112-3"><span><code>RoomBooking</code> — бронирование переговорок без пересечений, с отменой</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Словарь «комната → отсортированный список <code>(start, end, booking_id)</code>». <code>book</code>: проверь <code>start &lt; end</code>, найди позицию через <code>bisect</code> и проверь только соседей слева и справа; вставь. <code>cancel(booking_id)</code>. <code>free_rooms(start, end)</code> — комнаты из списка <code>rooms</code>, свободные на весь интервал.</p><p><b>Подвох.</b> Касание (<code>[9, 10)</code> и <code>[10, 11)</code>) — не пересечение. Неизвестная комната и <code>start &gt;= end</code> — <code>ValueError</code>, занято — <code>RoomBusy</code>. Тест бронирует 20 000 интервалов: проверка всех броней комнаты на каждое бронирование — O(n²).</p></details></div>
+<div class="task" data-test="test_atm"><label><input type="checkbox" id="t112-4"><span><code>ATM ★</code> — банкомат: выдать сумму минимальным числом купюр из ограниченных кассет</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Перебор от крупного номинала к мелкому: для номинала <code>d</code> попробуй взять <code>k</code> купюр от <code>min(count, rest // d)</code> вниз до 0 и рекурсивно добери остаток мелкими. Отсечения: остаток больше, чем денег в оставшихся кассетах, — тупик; <code>использовано + ⌈остаток / d⌉</code> не меньше лучшего найденного — дальше не идти (даже крупнейшими купюрами не обогнать). Найденный план применяй только целиком.</p><p><b>Подвох.</b> Жадный алгоритм ошибается на кассетах <code>{50: 1, 20: 3}</code> и сумме 60 — тест это проверяет. Невозможно выдать — <code>CannotDispense</code>, кассеты не меняются. <code>deposit</code> добавляет купюры, <code>balance</code> — сумма в банкомате.</p></details></div>
+<div class="run"><code>python3 pycourse/check.py 112</code><button type="button" class="copy">Копировать</button></div></div>
+<div class="box"><h3>Вопросы с собеседования по уроку:</h3></div>
+<div class="box quiz" id="q112-3" data-id="q112-3" data-kind="open">
+<h3><span class="qkind">Подумай</span><span>Как ты подходишь к задаче на бизнес-логику на лайвкоде, чтобы уложиться во время?</span></h3>
+
+<textarea id="in-q112-3" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>Первые 3–5 минут уточняю сценарии и инварианты и проговариваю их: что система делает, что запрещено, что происходит при ошибке, какие данные на входе. Затем пишу минимальную модель — пару <code>dataclass</code> и <code>Enum</code>, без иерархий «на будущее», — и сразу перехожу к ядру логики: сначала счастливый путь, потом ошибки через свои исключения. Внешнее (время, хранилище, отправку) получаю параметрами — это ускоряет и проверку, и тесты. Слежу за атомарностью: сначала вычисляю результат, потом применяю. Если вижу, что не успеваю, говорю, какую часть упрощаю и как бы сделал полностью. В конце прогоняю 2–3 сценария вслух и называю расширения: конкурентный доступ (блокировки, транзакции, ограничения в БД), персистентность, масштаб. Главное — дойти до работающей логики, а не идеальной модели.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q112-3-p0"><span>сценарии и инварианты в начале</span></label><label><input type="checkbox" id="q112-3-p1"><span>минимальная модель без оверинжиниринга</span></label><label><input type="checkbox" id="q112-3-p2"><span>счастливый путь, затем ошибки через исключения</span></label><label><input type="checkbox" id="q112-3-p3"><span>зависимости параметрами, атомарность</span></label><label><input type="checkbox" id="q112-3-p4"><span>проговорить упрощения и расширения</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<section class="sheet" id="l113"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">11.3 Код-ревью и поиск ошибок</div>
+<div class="box"><h3>Формат:</h3><p>Всё чаще вместо «напиши» дают «вот код, что с ним не так?»: Сбер, Wildberries, Ozon. Проверяют внимательность, знание подводных камней языка и инженерный кругозор. За 20 минут нужно найти как можно больше проблем <b>и расставить приоритеты</b>.</p></div>
+<div class="box"><h3>Чек-лист ревьюера — иди сверху вниз:</h3><ol><li><b>Корректность</b>: граничные случаи (пусто, один элемент, границы диапазонов), ошибки на единицу, неправильные условия, забытый <code>return</code>, изменение коллекции при обходе</li><li><b>Ловушки Python</b>: изменяемые аргументы по умолчанию, позднее связывание в замыканиях, <code>is</code> вместо <code>==</code>, общий список через <code>*</code>, мутация входных данных, <code>except:</code> без типа, <code>return</code> в <code>finally</code></li><li><b>Безопасность</b>: SQL-инъекции (f-строки в запросах), секреты в коде, пароли без хеширования, <code>eval</code>/<code>pickle</code> на недоверенных данных, отсутствие проверки прав</li><li><b>Ресурсы и надёжность</b>: незакрытые файлы и соединения (нет <code>with</code>), отсутствие таймаутов у сетевых вызовов, ретраи без backoff, проглоченные исключения</li><li><b>Конкурентность</b>: гонки check-then-act, блокирующие вызовы в <code>async def</code>, общее изменяемое состояние</li><li><b>Производительность</b>: N+1 запросы к БД, O(n²) там, где можно O(n), загрузка всего в память</li><li><b>Дизайн и читаемость</b>: имена, длина функций, дублирование, жёсткие зависимости, тестируемость</li></ol></div>
+<div class="box py"><h3>Как подавать замечания</h3><p>Начни с самого опасного («здесь SQL-инъекция — это блокер»), отделяй блокеры от стиля, к каждому замечанию — <b>почему</b> это плохо и <b>как</b> исправить. «Здесь <code>requests.get</code> без таймаута: если сервис повиснет, повиснет и воркер. Добавить <code>timeout=5</code> и ретраи с backoff».</p></div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">11.3 Код-ревью и поиск ошибок</div>
+<div class="box quiz" id="q113-1" data-id="q113-1" data-kind="review">
+<h3><span class="qkind">Код-ревью</span><span>Найди проблемы в Django-представлении:<span class="tag">· частый вопрос на собесе</span></span></h3>
+<pre><code><span class="k">def</span> order_list(request):
+    orders = Order.objects.filter(user_id=request.GET[<span class="s">&quot;user&quot;</span>])
+    result = []
+    <span class="k">for</span> o <span class="k">in</span> orders:
+        items = [{<span class="s">&quot;name&quot;</span>: i.product.name, <span class="s">&quot;price&quot;</span>: i.product.price} <span class="k">for</span> i <span class="k">in</span> o.items.all()]
+        result.append({<span class="s">&quot;id&quot;</span>: o.id, <span class="s">&quot;total&quot;</span>: sum(x[<span class="s">&quot;price&quot;</span>] <span class="k">for</span> x <span class="k">in</span> items), <span class="s">&quot;items&quot;</span>: items})
+    <span class="k">return</span> JsonResponse(result, safe=<span class="k">False</span>)</code></pre>
+<textarea id="in-q113-1" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><ul><li><b>N+1 (и даже N·M+1) запросов</b>: на каждый заказ — запрос <code>o.items.all()</code>, на каждую позицию — запрос за <code>product</code>. Исправление: <code>Order.objects.filter(...).prefetch_related(&quot;items__product&quot;)</code> (или <code>Prefetch</code> с <code>select_related(&quot;product&quot;)</code>) — три запроса вместо тысяч</li><li><b>нет проверки прав</b>: <code>user</code> берётся из параметра запроса — любой может смотреть чужие заказы (IDOR). Нужно <code>request.user</code> и <code>@login_required</code></li><li><code>request.GET[&quot;user&quot;]</code> бросит <code>KeyError</code> → 500 вместо 400</li><li><b>нет пагинации</b>: у пользователя с 10 000 заказов ответ огромный</li><li>сумма считается в Python, хотя можно <code>annotate(total=Sum(&quot;items__product__price&quot;))</code>; к тому же цена берётся <b>текущая</b> из продукта, а не цена на момент заказа — бизнес-ошибка: цену нужно хранить в позиции заказа</li><li>денежные значения — <code>Decimal</code>, а <code>JsonResponse</code> не сериализует <code>Decimal</code> без настройки</li><li>сериализация вручную → DRF-сериализатор или схема pydantic</li></ul><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q113-1-p0"><span>N+1 и prefetch_related / select_related</span></label><label><input type="checkbox" id="q113-1-p1"><span>проверка прав, IDOR</span></label><label><input type="checkbox" id="q113-1-p2"><span>KeyError → 500, валидация входа</span></label><label><input type="checkbox" id="q113-1-p3"><span>пагинация</span></label><label><input type="checkbox" id="q113-1-p4"><span>цена на момент заказа, Decimal</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+<div class="box quiz" id="q113-2" data-id="q113-2" data-kind="review">
+<h3><span class="qkind">Код-ревью</span><span>Найди проблемы в асинхронном коде:<span class="tag">· частый вопрос на собесе</span></span></h3>
+<pre><code><span class="k">import</span> asyncio, requests
+
+cache = {}
+
+<span class="k">async</span> <span class="k">def</span> get_rate(currency):
+    <span class="k">if</span> currency <span class="k">not</span> <span class="k">in</span> cache:
+        resp = requests.get(<span class="s">f&quot;https://api.example.com/rate/{currency}&quot;</span>)
+        cache[currency] = resp.json()[<span class="s">&quot;rate&quot;</span>]
+    <span class="k">return</span> cache[currency]
+
+<span class="k">async</span> <span class="k">def</span> convert_all(amounts):
+    result = []
+    <span class="k">for</span> cur, amount <span class="k">in</span> amounts:
+        rate = <span class="k">await</span> get_rate(cur)
+        result.append(amount * rate)
+    <span class="k">return</span> result</code></pre>
+<textarea id="in-q113-2" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><ul><li>**блокирующий <code>requests.get</code> в <code>async def</code>** замораживает цикл событий: все остальные запросы сервиса ждут. Нужен асинхронный клиент (<code>httpx.AsyncClient</code>, <code>aiohttp</code>) или <code>asyncio.to_thread</code></li><li><b>нет таймаута</b> — зависший API повесит обработчик навсегда</li><li><b>нет обработки ошибок</b>: не проверяется статус ответа (<code>raise_for_status</code>), нет ретраев</li><li><b>кэш без TTL и ограничения размера</b>: курсы устаревают, а память растёт</li><li><b>cache stampede</b>: при одновременных запросах одной валюты все пойдут в API (после перехода на асинхронный клиент между проверкой и записью появится <code>await</code>) — нужен <code>asyncio.Lock</code> на ключ или общая задача (singleflight)</li><li><b>последовательные запросы</b> в <code>convert_all</code>: разные валюты можно запрашивать конкурентно — <code>gather</code> по уникальным валютам с семафором</li><li><code>float</code> для денег → <code>Decimal</code></li><li>клиент создаётся на каждый запрос (в случае httpx) → один клиент на приложение с пулом соединений</li></ul><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q113-2-p0"><span>блокирующий вызов в async</span></label><label><input type="checkbox" id="q113-2-p1"><span>таймаут и обработка ошибок</span></label><label><input type="checkbox" id="q113-2-p2"><span>кэш без TTL и stampede</span></label><label><input type="checkbox" id="q113-2-p3"><span>последовательные запросы → gather с семафором</span></label><label><input type="checkbox" id="q113-2-p4"><span>Decimal для денег, переиспользование клиента</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">11.3 Код-ревью и поиск ошибок</div>
+<div class="box quiz" id="q113-3" data-id="q113-3" data-kind="bug">
+<h3><span class="qkind">Найди баг</span><span>Что не так с этой функцией?</span></h3>
+<pre><code><span class="k">def</span> add_tag(tag, tags=[]):
+    <span class="k">if</span> tag <span class="k">not</span> <span class="k">in</span> tags:
+        tags.append(tag)
+    <span class="k">return</span> tags
+
+user1 = add_tag(<span class="s">&quot;python&quot;</span>)
+user2 = add_tag(<span class="s">&quot;go&quot;</span>)</code></pre>
+<div class="qopts" role="group">
+<label data-correct="0"><input type="radio" name="q113-3" id="q113-3-o0"><span><code>in</code> для списка не работает со строками</span></label>
+<label data-correct="1"><input type="radio" name="q113-3" id="q113-3-o1"><span>список по умолчанию общий для всех вызовов: у <code>user2</code> окажутся и <code>python</code>, и <code>go</code></span></label>
+<label data-correct="0"><input type="radio" name="q113-3" id="q113-3-o2"><span><code>append</code> возвращает <code>None</code></span></label>
+<label data-correct="0"><input type="radio" name="q113-3" id="q113-3-o3"><span>всё правильно</span></label>
+</div>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Почему</b><p>Повторение урока 2.1 — на ревью эту ошибку ищут первой. Исправление: <code>tags=None</code> и <code>tags = [] if tags is None else tags</code>. Плюс вопрос к дизайну: функция и мутирует аргумент, и возвращает его — лучше выбрать что-то одно.</p></div>
+</div>
+<div class="box hw" data-lesson="113"><h3>Домашка 11.3 <span class="count"></span></h3>
+<div class="task" data-test="test_paginate"><label><input type="checkbox" id="t113-1"><span><code>paginate</code> — в функции 4 ошибки: найди и исправь (страницы нумеруются с 1)</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Сравни с описанием в docstring построчно. Посчитай руками для 25 элементов по 10 на страницу: сколько страниц, что на третьей, есть ли следующая.</p><p><b>Подвох.</b> Ошибки на единицу, округление числа страниц, условие <code>has_next</code>, отсутствие проверки входа.</p></details></div>
+<div class="task" data-test="test_merge_settings"><label><input type="checkbox" id="t113-2"><span><code>merge_settings</code> — в функции 3 ошибки</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Функция должна вернуть <b>новый</b> словарь и не трогать входные. Слияние — рекурсивное на любую глубину.</p><p><b>Подвох.</b> <code>result = defaults</code> — не копия. <code>result[key].update(value)</code> — и не рекурсия, и мутация вложенного словаря <code>defaults</code>.</p></details></div>
+<div class="task" data-test="test_parse_duration"><label><input type="checkbox" id="t113-3"><span><code>parse_duration</code> — в функции 3 ошибки</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Прочитай регулярное выражение и словарь единиц. Что будет с <code>&quot;90s&quot;</code> и <code>&quot;1h&quot;</code>? А с <code>&quot;abc&quot;</code>?</p><p><b>Подвох.</b> Строка должна целиком состоять из пар «число + единица»: <code>re.fullmatch</code>. Мусор — <code>ValueError</code>.</p></details></div>
+<div class="task" data-test="test_top_words"><label><input type="checkbox" id="t113-4"><span><code>top_words</code> — в функции 4 ошибки</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Запусти в уме на <code>&quot;Go go  GO, python!&quot;</code>. Слова разделяются любыми пробельными символами, регистр и знаки препинания по краям не важны, порядок — по убыванию частоты, при равенстве — по алфавиту.</p><p><b>Подвох.</b> <code>.lower</code> без скобок, <code>split(&quot; &quot;)</code>, порядок сортировки, пустые «слова».</p></details></div>
+<div class="task" data-test="test_fetch_all"><label><input type="checkbox" id="t113-5"><span><code>fetch_all ★</code> — асинхронная функция, в ней 5 ошибок</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Требования в docstring: конкурентно, не больше <code>limit</code> одновременно, до <code>retries + 1</code> попыток на URL с паузой <code>delay</code> между ними, на месте упавшего URL — исключение, порядок результатов — как у <code>urls</code>.</p><p><b>Подвох.</b> Блокирующий <code>time.sleep</code> в корутине, последовательный цикл, нет <code>break</code> после успеха, не то число попыток, потерянные ошибки.</p></details></div>
+<div class="run"><code>python3 pycourse/check.py 113</code><button type="button" class="copy">Копировать</button></div></div>
+<div class="box"><h3>Вопросы с собеседования по уроку:</h3></div>
+<div class="box quiz" id="q113-4" data-id="q113-4" data-kind="open">
+<h3><span class="qkind">Подумай</span><span>Что ты проверяешь в первую очередь, когда ревьюишь чужой код?</span></h3>
+
+<textarea id="in-q113-4" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>Сначала понимаю задачу — что изменение должно делать (описание, тикет, тесты), иначе невозможно судить о корректности. Дальше по приоритету: корректность и граничные случаи; безопасность (инъекции, права доступа, секреты, недоверенные данные); надёжность (обработка ошибок, таймауты и ретраи у внешних вызовов, транзакции и атомарность, идемпотентность фоновых задач); данные и миграции (обратная совместимость, блокирующие миграции на больших таблицах); производительность (N+1, лишние запросы, сложность алгоритмов, загрузка в память); конкурентность; затем — читаемость, дизайн и тесты: покрыты ли новые ветки и граничные случаи. Замечания формулирую с причиной и предложением, отделяю блокеры от необязательного («nit»), не спорю о вкусе там, где есть линтер и автоформатер. Большой пулл-реквест прошу разбить.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q113-4-p0"><span>понять задачу изменения</span></label><label><input type="checkbox" id="q113-4-p1"><span>корректность и граничные случаи</span></label><label><input type="checkbox" id="q113-4-p2"><span>безопасность</span></label><label><input type="checkbox" id="q113-4-p3"><span>надёжность: ошибки, таймауты, транзакции, идемпотентность</span></label><label><input type="checkbox" id="q113-4-p4"><span>миграции и производительность</span></label><label><input type="checkbox" id="q113-4-p5"><span>тесты; формулировка замечаний и приоритеты</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<div class="part" id="m12"><b>Модуль 12</b><h2>Базы данных</h2></div>
+<section class="sheet" id="l121"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">12.1 SQL на собеседовании</div>
+<div class="box"><h3>В каком порядке выполняется запрос:</h3><pre><code><span class="k">SELECT</span> category, <span class="k">SUM</span>(qty * price) <span class="k">AS</span> revenue     <span class="c">-- 5. вычислить выражения</span>
+<span class="k">FROM</span> orders o                                    <span class="c">-- 1. откуда</span>
+<span class="k">JOIN</span> order_items i <span class="k">ON</span> i.order_id = o.id          <span class="c">--    соединить</span>
+<span class="k">WHERE</span> o.status = <span class="s">&#x27;paid&#x27;</span>                          <span class="c">-- 2. отфильтровать строки</span>
+<span class="k">GROUP</span> <span class="k">BY</span> category                                <span class="c">-- 3. сгруппировать</span>
+<span class="k">HAVING</span> <span class="k">SUM</span>(qty * price) &gt; <span class="n">1000</span>                   <span class="c">-- 4. отфильтровать группы</span>
+<span class="k">ORDER</span> <span class="k">BY</span> revenue <span class="k">DESC</span>                            <span class="c">-- 6. отсортировать</span>
+<span class="k">LIMIT</span> <span class="n">10</span>;                                        <span class="c">-- 7. обрезать</span></code></pre>
+<p>Отсюда объясняются почти все «почему не работает»: агрегат нельзя использовать в <code>WHERE</code> (группировки ещё нет), алиас из <code>SELECT</code> нельзя использовать в <code>WHERE</code>, а в <code>ORDER BY</code> — можно; оконные функции считаются после <code>WHERE</code> и <code>GROUP BY</code>, поэтому фильтровать по ним можно только во внешнем запросе или CTE.</p></div>
+<div class="box"><h3>Соединения:</h3><div class="tbl"><table><thead><tr><th>JOIN</th><th>Что остаётся</th></tr></thead><tbody><tr><td><code>INNER JOIN</code></td><td>только пары, где условие выполнилось</td></tr><tr><td><code>LEFT JOIN</code></td><td>все строки слева; справа — <code>NULL</code>, если пары нет</td></tr><tr><td><code>RIGHT JOIN</code></td><td>зеркально: все справа (то же, что LEFT с переставленными таблицами)</td></tr><tr><td><code>FULL JOIN</code></td><td>все строки с обеих сторон</td></tr><tr><td><code>CROSS JOIN</code></td><td>декартово произведение</td></tr></tbody></table></div>
+<p>Классика «кто без заказов»: <code>LEFT JOIN … WHERE o.id IS NULL</code> или <code>NOT EXISTS</code>.</p></div>
+<div class="box quiz" id="q121-1" data-id="q121-1" data-kind="output" data-answer="[(&#x27;ann&#x27;, 1), (&#x27;bob&#x27;, 0)]
+[(&#x27;ann&#x27;, 1)]">
+<h3><span class="qkind">Что выведет?</span><span>Что выведет программа?<span class="tag">· частый вопрос на собесе</span></span></h3>
+<pre><code><span class="k">import</span> sqlite3
+c = sqlite3.connect(<span class="s">&quot;:memory:&quot;</span>)
+c.executescript(<span class="s">&quot;&quot;&quot;
+CREATE TABLE users(id, name);
+INSERT INTO users VALUES (1, &#x27;ann&#x27;), (2, &#x27;bob&#x27;);
+CREATE TABLE orders(user_id, status);
+INSERT INTO orders VALUES (1, &#x27;paid&#x27;), (1, &#x27;new&#x27;);
+&quot;&quot;&quot;</span>)
+q1 = <span class="s">&quot;&quot;&quot;SELECT u.name, COUNT(o.user_id) FROM users u
+        LEFT JOIN orders o ON o.user_id = u.id AND o.status = &#x27;paid&#x27;
+        GROUP BY u.name ORDER BY u.name&quot;&quot;&quot;</span>
+q2 = <span class="s">&quot;&quot;&quot;SELECT u.name, COUNT(o.user_id) FROM users u
+        LEFT JOIN orders o ON o.user_id = u.id
+        WHERE o.status = &#x27;paid&#x27;
+        GROUP BY u.name ORDER BY u.name&quot;&quot;&quot;</span>
+print(c.execute(q1).fetchall())
+print(c.execute(q2).fetchall())</code></pre>
+<textarea id="in-q121-1" rows="3" spellcheck="false" placeholder="Напиши, что напечатает программа, строка в строку. Если упадёт — последней строкой имя исключения" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Вывод</b><pre><code>[(&#x27;ann&#x27;, 1), (&#x27;bob&#x27;, 0)]
+[(&#x27;ann&#x27;, 1)]</code></pre><p>Условие на правую таблицу в <code>WHERE</code> превращает <code>LEFT JOIN</code> во <code>INNER</code>: у bob нет пары, <code>o.status</code> равно <code>NULL</code>, и <code>NULL = &#x27;paid&#x27;</code> — не истина, строка отфильтровывается. Чтобы сохранить всех слева, условие на правую таблицу пишут в <code>ON</code>. <code>COUNT(o.user_id)</code> не считает <code>NULL</code>, а <code>COUNT(*)</code> посчитал бы для bob единицу.</p></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">12.1 SQL на собеседовании</div>
+<div class="box"><h3>NULL — трёхзначная логика:</h3><ul><li><code>NULL = NULL</code> — не истина, а <code>NULL</code> (неизвестно). Проверка — <code>IS NULL</code></li><li>агрегаты (<code>SUM</code>, <code>AVG</code>, <code>COUNT(col)</code>) пропускают <code>NULL</code>; <code>COUNT(*)</code> считает строки</li><li><code>COALESCE(x, 0)</code> — подставить значение вместо <code>NULL</code></li></ul></div>
+<div class="box quiz" id="q121-2" data-id="q121-2" data-kind="output" data-answer="0
+2
+(2, 1, 2.0)">
+<h3><span class="qkind">Что выведет?</span><span>Что выведет программа?<span class="tag">· частый вопрос на собесе</span></span></h3>
+<pre><code><span class="k">import</span> sqlite3
+c = sqlite3.connect(<span class="s">&quot;:memory:&quot;</span>)
+c.executescript(<span class="s">&quot;&quot;&quot;
+CREATE TABLE a(x); INSERT INTO a VALUES (1), (2), (3);
+CREATE TABLE b(y); INSERT INTO b VALUES (2), (NULL);
+&quot;&quot;&quot;</span>)
+print(c.execute(<span class="s">&quot;SELECT COUNT(*) FROM a WHERE x NOT IN (SELECT y FROM b)&quot;</span>).fetchone()[<span class="n">0</span>])
+print(c.execute(<span class="s">&quot;SELECT COUNT(*) FROM a WHERE NOT EXISTS (SELECT 1 FROM b WHERE b.y = a.x)&quot;</span>).fetchone()[<span class="n">0</span>])
+print(c.execute(<span class="s">&quot;SELECT COUNT(*), COUNT(y), AVG(y) FROM b&quot;</span>).fetchone())</code></pre>
+<textarea id="in-q121-2" rows="3" spellcheck="false" placeholder="Напиши, что напечатает программа, строка в строку. Если упадёт — последней строкой имя исключения" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Вывод</b><pre><code>0
+2
+(2, 1, 2.0)</code></pre><p>Самая коварная ловушка SQL: <code>x NOT IN (2, NULL)</code> — это <code>x &lt;&gt; 2 AND x &lt;&gt; NULL</code>, а второе всегда <code>NULL</code>, поэтому условие никогда не истинно, и результат пуст. <code>NOT EXISTS</code> с <code>NULL</code> работает как ожидается. Правило: для «нет в другой таблице» используй <code>NOT EXISTS</code> или <code>LEFT JOIN … IS NULL</code>.</p></div>
+</div>
+<div class="box"><h3>Оконные функции — их спрашивают почти всегда:</h3><p><code>функция() OVER (PARTITION BY … ORDER BY … [рамка])</code> считает значение для каждой строки по «окну» связанных строк, <b>не схлопывая</b> строки, в отличие от <code>GROUP BY</code>.</p>
+<div class="tbl"><table><thead><tr><th>Функция</th><th>Для чего</th></tr></thead><tbody><tr><td><code>ROW_NUMBER()</code></td><td>номер строки в группе: 1, 2, 3, 4</td></tr><tr><td><code>RANK()</code></td><td>с пропусками при равенстве: 1, 2, 2, 4</td></tr><tr><td><code>DENSE_RANK()</code></td><td>без пропусков: 1, 2, 2, 3</td></tr><tr><td><code>SUM(x) OVER (ORDER BY day)</code></td><td>нарастающий итог</td></tr><tr><td><code>LAG(x)</code>, <code>LEAD(x)</code></td><td>значение из предыдущей и следующей строки: рост к прошлому периоду</td></tr><tr><td><code>AVG(x) OVER (ORDER BY day ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)</code></td><td>скользящее среднее за 7 дней</td></tr></tbody></table></div></div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">12.1 SQL на собеседовании</div>
+<div class="box quiz" id="q121-3" data-id="q121-3" data-kind="output" data-answer="a 1 1 1
+b 2 2 2
+c 3 3 3
+d 4 4 4
+e 1 1 1">
+<h3><span class="qkind">Что выведет?</span><span>Что выведет программа?</span></h3>
+<pre><code><span class="k">import</span> sqlite3
+c = sqlite3.connect(<span class="s">&quot;:memory:&quot;</span>)
+c.executescript(<span class="s">&quot;&quot;&quot;
+CREATE TABLE s(name, dept, salary);
+INSERT INTO s VALUES (&#x27;a&#x27;, &#x27;x&#x27;, 300), (&#x27;b&#x27;, &#x27;x&#x27;, 200), (&#x27;c&#x27;, &#x27;x&#x27;, 200), (&#x27;d&#x27;, &#x27;x&#x27;, 100), (&#x27;e&#x27;, &#x27;y&#x27;, 50);
+&quot;&quot;&quot;</span>)
+rows = c.execute(<span class="s">&quot;&quot;&quot;
+    SELECT name,
+           ROW_NUMBER() OVER w, RANK() OVER w, DENSE_RANK() OVER w
+    FROM s
+    WINDOW w AS (PARTITION BY dept ORDER BY salary DESC, name)
+    ORDER BY dept, salary DESC, name
+&quot;&quot;&quot;</span>).fetchall()
+<span class="k">for</span> r <span class="k">in</span> rows:
+    print(*r)</code></pre>
+<textarea id="in-q121-3" rows="3" spellcheck="false" placeholder="Напиши, что напечатает программа, строка в строку. Если упадёт — последней строкой имя исключения" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Вывод</b><pre><code>a 1 1 1
+b 2 2 2
+c 3 3 3
+d 4 4 4
+e 1 1 1</code></pre><p>Ловушка в определении окна: в <code>ORDER BY</code> окна добавлено <code>name</code>, поэтому равных строк нет — и все три функции совпали. Ранги различаются только тогда, когда значения <code>ORDER BY</code> окна равны. Если оставить <code>ORDER BY salary DESC</code>, получится <code>b 2 2 2</code> и <code>c 3 2 2</code>, а <code>d</code> — <code>4 4 3</code>. Для «топ-2 зарплаты в отделе с учётом равных» берут <code>DENSE_RANK</code> по одной зарплате.</p></div>
+</div>
+<div class="box"><h3>Топ-N в группе — каркас:</h3><pre><code><span class="k">WITH</span> ranked <span class="k">AS</span> (
+    <span class="k">SELECT</span> department, name, salary,
+           DENSE_RANK() <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> department <span class="k">ORDER</span> <span class="k">BY</span> salary <span class="k">DESC</span>) <span class="k">AS</span> r
+    <span class="k">FROM</span> employees
+)
+<span class="k">SELECT</span> department, name, salary <span class="k">FROM</span> ranked <span class="k">WHERE</span> r &lt;= <span class="n">2</span>;</code></pre></div>
+<div class="box quiz" id="q121-4" data-id="q121-4" data-kind="choice">
+<h3><span class="qkind">Выбери</span><span>Чем <code>WHERE</code> отличается от <code>HAVING</code>?<span class="tag">· частый вопрос на собесе</span></span></h3>
+
+<div class="qopts" role="group">
+<label data-correct="0"><input type="radio" name="q121-4" id="q121-4-o0"><span>ничем, это синонимы</span></label>
+<label data-correct="1"><input type="radio" name="q121-4" id="q121-4-o1"><span><code>WHERE</code> фильтрует строки до группировки и не видит агрегатов, <code>HAVING</code> фильтрует группы после <code>GROUP BY</code> и работает с агрегатами</span></label>
+<label data-correct="0"><input type="radio" name="q121-4" id="q121-4-o2"><span><code>HAVING</code> быстрее</span></label>
+<label data-correct="0"><input type="radio" name="q121-4" id="q121-4-o3"><span><code>WHERE</code> нельзя использовать вместе с <code>GROUP BY</code></span></label>
+</div>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Почему</b><p>Условие на обычные столбцы лучше писать в <code>WHERE</code>: строки отбрасываются до дорогой группировки, и может использоваться индекс. В <code>HAVING</code> — только условия на агрегаты: <code>HAVING COUNT(*) &gt; 5</code>.</p></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">12.1 SQL на собеседовании</div>
+<div class="box hw" data-lesson="121"><h3>Домашка 12.1 <span class="count"></span></h3>
+<div class="task" data-test="test_users_without_orders"><label><input type="checkbox" id="t121-1"><span><code>Q_USERS_WITHOUT_ORDERS</code> — имена пользователей без единого заказа, по алфавиту</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>LEFT JOIN orders</code> и <code>WHERE o.id IS NULL</code>, или <code>NOT EXISTS (SELECT 1 FROM orders WHERE user_id = u.id)</code>. Один столбец <code>name</code>, <code>ORDER BY name</code>.</p><p><b>Подвох.</b> <code>NOT IN (SELECT user_id …)</code> здесь сработает (<code>user_id</code> объявлен <code>NOT NULL</code>), но на собесе лучше показать, что ты знаешь ловушку с <code>NULL</code>.</p></details></div>
+<div class="task" data-test="test_revenue_by_category"><label><input type="checkbox" id="t121-2"><span><code>Q_REVENUE_BY_CATEGORY</code> — выручка по категориям по <b>оплаченным</b> заказам: <code>category, revenue</code>, только где выручка больше 50 000, по убыванию выручки</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>orders → order_items → products</code>, <code>WHERE status = &#x27;paid&#x27;</code>, <code>GROUP BY category</code>, <code>HAVING</code>. Выручка — <code>SUM(qty * order_items.price)</code>.</p><p><b>Подвох.</b> Цена — из <code>order_items</code> (на момент заказа), а не текущая из <code>products</code>. Фильтр по статусу — в <code>WHERE</code>, порог по сумме — в <code>HAVING</code>.</p></details></div>
+<div class="task" data-test="test_top2_salary"><label><input type="checkbox" id="t121-3"><span><code>Q_TOP2_SALARY</code> — в каждом отделе сотрудники с двумя наибольшими <b>различными</b> зарплатами: <code>department, name, salary</code>, сортировка по отделу, зарплате по убыванию, имени</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> CTE с <code>DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC)</code>, внешний запрос с <code>WHERE r &lt;= 2</code>.</p><p><b>Подвох.</b> <code>ROW_NUMBER</code> отрежет второго сотрудника с той же зарплатой, <code>RANK</code> после двух равных первых даст третьему 3. Нужен именно <code>DENSE_RANK</code>.</p></details></div>
+<div class="task" data-test="test_running_gmv"><label><input type="checkbox" id="t121-4"><span><code>Q_RUNNING_GMV</code> — по дням для оплаченных заказов: <code>day, gmv, running_gmv</code> (нарастающий итог), по возрастанию дня (Ozon)</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Сначала CTE с выручкой по дням: <code>date(created_at) AS day</code>, <code>SUM(qty * price)</code>. Затем <code>SUM(gmv) OVER (ORDER BY day)</code>.</p><p><b>Подвох.</b> Окно поверх уже сгруппированных данных: если навесить его на сырые строки позиций, получишь по строке на позицию, а не на день.</p></details></div>
+<div class="task" data-test="test_second_salary"><label><input type="checkbox" id="t121-5"><span><code>Q_SECOND_SALARY</code> — вторая по величине <b>различная</b> зарплата среди всех сотрудников; если её нет — <code>NULL</code> (одна строка, один столбец)</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>SELECT MAX(salary) FROM employees WHERE salary &lt; (SELECT MAX(salary) FROM employees)</code> — агрегат над пустым множеством даёт <code>NULL</code>, как и требуется.</p><p><b>Подвох.</b> <code>ORDER BY salary DESC LIMIT 1 OFFSET 1</code> без <code>DISTINCT</code> вернёт первую зарплату ещё раз, если её получают двое, а при отсутствии второй — ноль строк вместо <code>NULL</code>.</p></details></div>
+<div class="task" data-test="test_first_week"><label><input type="checkbox" id="t121-6"><span><code>Q_FIRST_WEEK ★</code> — для каждого пользователя с оплаченными заказами: <code>user_id, first_order_day, first_week_revenue</code> — дата первого <b>оплаченного</b> заказа и выручка оплаченных заказов за 7 дней начиная с неё (первые 7 суток, <code>&lt; first + 7 дней</code>), по <code>user_id</code></span></label><details><summary>Как решать</summary><p><b>Как решать.</b> CTE <code>paid</code> с суммой каждого оплаченного заказа и <code>MIN(created_at) OVER (PARTITION BY user_id) AS first_at</code>. Затем <code>WHERE created_at &lt; datetime(first_at, &#x27;+7 days&#x27;)</code> и <code>GROUP BY user_id</code>. <code>first_order_day</code> — <code>date(first_at)</code>.</p><p><b>Подвох.</b> Сначала посчитай сумму по заказу, иначе при соединении с позициями легко умножить. Граница — 7 суток от <b>момента</b> первого заказа, а не от начала дня.</p></details></div>
+<div class="run"><code>python3 pycourse/check.py 121</code><button type="button" class="copy">Копировать</button></div></div>
+<div class="box"><h3>Вопросы с собеседования по уроку:</h3></div>
+<div class="box quiz" id="q121-5" data-id="q121-5" data-kind="open">
+<h3><span class="qkind">Вопрос с собеса</span><span>Чем LEFT JOIN отличается от INNER JOIN? Что такое оконные функции и чем они отличаются от GROUP BY?</span></h3>
+
+<textarea id="in-q121-5" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p><code>INNER JOIN</code> оставляет только строки, для которых нашлась пара по условию соединения. <code>LEFT JOIN</code> оставляет все строки левой таблицы; если пары нет, столбцы правой — <code>NULL</code>. <code>RIGHT JOIN</code> — зеркально, <code>FULL</code> — все с обеих сторон. Ловушка: условие на правую таблицу в <code>WHERE</code> после <code>LEFT JOIN</code> отбрасывает строки с <code>NULL</code> и превращает соединение во внутреннее — такие условия пишут в <code>ON</code>. Оконные функции (<code>… OVER (PARTITION BY … ORDER BY …)</code>) вычисляют значение для каждой строки по набору связанных строк, не схлопывая их, тогда как <code>GROUP BY</code> превращает группу в одну строку. Применения: ранжирование (<code>ROW_NUMBER</code>, <code>RANK</code>, <code>DENSE_RANK</code> — различаются обработкой равных), топ-N в группе, нарастающие итоги, <code>LAG</code>/<code>LEAD</code> для сравнения с предыдущим периодом, скользящие средние с рамкой <code>ROWS BETWEEN</code>. Окна вычисляются после <code>WHERE</code>/<code>GROUP BY</code>/<code>HAVING</code>, поэтому фильтровать по их результату можно только во внешнем запросе или CTE.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q121-5-p0"><span>INNER против LEFT, NULL справа</span></label><label><input type="checkbox" id="q121-5-p1"><span>условие в ON против WHERE</span></label><label><input type="checkbox" id="q121-5-p2"><span>окна не схлопывают строки, в отличие от GROUP BY</span></label><label><input type="checkbox" id="q121-5-p3"><span>ROW_NUMBER / RANK / DENSE_RANK и равные значения</span></label><label><input type="checkbox" id="q121-5-p4"><span>нарастающий итог, LAG/LEAD</span></label><label><input type="checkbox" id="q121-5-p5"><span>порядок выполнения: фильтр по окну — во внешнем запросе</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<section class="sheet" id="l122"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">12.2 Индексы, транзакции, изоляция, блокировки</div>
+<div class="box"><h3>Индекс — как он устроен:</h3><p>Обычный индекс в PostgreSQL и MySQL — <b>B+-дерево</b>: отсортированные ключи в широких узлах размером со страницу диска (8 КБ), листья связаны в список. Поиск по равенству и диапазону — O(log n) с очень маленькой высотой (3–4 уровня на миллионы строк), плюс последовательное чтение листьев для диапазона и <code>ORDER BY</code>. Цена — место на диске и замедление записи: каждый <code>INSERT</code>/<code>UPDATE</code> обновляет все индексы таблицы.</p></div>
+<div class="box"><h3>Составной индекс <code>(a, b, c)</code> и правило левого префикса:</h3><p>Строки отсортированы по <code>a</code>, при равных <code>a</code> — по <code>b</code>, затем по <code>c</code>. Поэтому индекс помогает для условий на <code>a</code>, <code>a и b</code>, <code>a и b и c</code>, для <code>a = ? ORDER BY b</code>, но <b>не</b> для условия только на <code>b</code> или <code>c</code>. Столбцы с равенством — первыми, столбец диапазона или сортировки — после них.</p></div>
+<div class="box"><h3>Когда индекс не помогает (вопрос в 27% интервью):</h3><ul><li>функция или выражение над столбцом: <code>WHERE lower(email) = …</code>, <code>WHERE created_at::date = …</code> → нужен индекс по выражению или переписать условие диапазоном</li><li><code>LIKE &#x27;%текст&#x27;</code> — с ведущим <code>%</code> (для поиска подстроки — триграммы <code>pg_trgm</code> или полнотекстовый поиск)</li><li>низкая селективность: <code>WHERE status = &#x27;active&#x27;</code>, когда активны 90% строк, — полное сканирование дешевле</li><li>условие не на левый префикс составного индекса</li><li>несовпадение типов, неявное приведение</li><li><code>OR</code> по разным столбцам (иногда спасает Bitmap Or)</li><li>маленькая таблица — планировщику проще прочитать её целиком</li><li>устаревшая статистика — планировщик ошибается в оценках (<code>ANALYZE</code>)</li></ul>
+<p><b>Покрывающий индекс</b>: если все нужные столбцы есть в индексе (<code>INCLUDE (…)</code> в PostgreSQL), база не ходит в таблицу — Index Only Scan.</p></div>
+<div class="box quiz" id="q122-1" data-id="q122-1" data-kind="choice">
+<h3><span class="qkind">Выбери</span><span>Есть индекс <code>(user_id, status, created_at)</code>. Какие запросы смогут эффективно его использовать? Отметь все.<span class="tag">· частый вопрос на собесе</span></span></h3>
+
+<div class="qopts" role="group">
+<label data-correct="1"><input type="checkbox" name="q122-1" id="q122-1-o0"><span><code>WHERE user_id = 7</code></span></label>
+<label data-correct="1"><input type="checkbox" name="q122-1" id="q122-1-o1"><span><code>WHERE user_id = 7 AND status = &#x27;paid&#x27; ORDER BY created_at DESC LIMIT 20</code></span></label>
+<label data-correct="0"><input type="checkbox" name="q122-1" id="q122-1-o2"><span><code>WHERE status = &#x27;paid&#x27;</code></span></label>
+<label data-correct="0"><input type="checkbox" name="q122-1" id="q122-1-o3"><span><code>WHERE created_at &gt; &#x27;2026-01-01&#x27;</code></span></label>
+<label data-correct="1"><input type="checkbox" name="q122-1" id="q122-1-o4"><span><code>WHERE user_id = 7 AND created_at &gt; &#x27;2026-01-01&#x27;</code> (частично: поиск по <code>user_id</code>, дальше фильтр)</span></label>
+</div>
+<p class="sm">Здесь несколько правильных вариантов.</p>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Почему</b><p>Правило левого префикса. Второй запрос — идеальный случай: два равенства и сортировка по следующему столбцу, база читает 20 записей подряд из индекса и не сортирует. В последнем запросе пропущен <code>status</code>, поэтому по <code>created_at</code> индекс уже не упорядочен — используется только префикс <code>user_id</code>.</p></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">12.2 Индексы, транзакции, изоляция, блокировки</div>
+<div class="box"><h3>EXPLAIN — читать план запроса:</h3><pre><code><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span> <span class="k">SELECT</span> * <span class="k">FROM</span> orders <span class="k">WHERE</span> user_id = <span class="n">7</span> <span class="k">ORDER</span> <span class="k">BY</span> created_at <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="n">20</span>;
+<span class="c">-- Limit (actual time=0.05..0.09 rows=20)</span>
+<span class="c">--   -&gt; Index Scan Backward using orders_user_created on orders (rows=20)</span>
+<span class="c">--        Index Cond: (user_id = 7)</span></code></pre>
+<div class="tbl"><table><thead><tr><th>Узел</th><th>Что значит</th></tr></thead><tbody><tr><td>Seq Scan</td><td>читаем всю таблицу</td></tr><tr><td>Index Scan</td><td>по индексу находим строки, читаем их из таблицы</td></tr><tr><td>Index Only Scan</td><td>всё есть в индексе, в таблицу не ходим</td></tr><tr><td>Bitmap Heap Scan</td><td>собрали битовую карту страниц по индексу(ам), читаем страницы по порядку</td></tr><tr><td>Nested Loop / Hash Join / Merge Join</td><td>способы соединения: для маленького внешнего набора, для больших несортированных, для отсортированных</td></tr><tr><td>Sort, «external merge Disk»</td><td>сортировка, не влезла в <code>work_mem</code></td></tr></tbody></table></div>
+<p><code>EXPLAIN</code> — только план и <b>оценки</b>, <code>EXPLAIN ANALYZE</code> — <b>выполняет</b> запрос и показывает реальное время и число строк. Большое расхождение <code>rows</code> оценки и факта — признак устаревшей статистики. Осторожно: <code>EXPLAIN ANALYZE</code> для <code>UPDATE</code>/<code>DELETE</code> реально меняет данные — оборачивай в транзакцию с <code>ROLLBACK</code>.</p></div>
+<div class="box"><h3>ACID:</h3><ul><li><b>Atomicity</b> — транзакция выполняется целиком или никак</li><li><b>Consistency</b> — после транзакции соблюдаются все ограничения (ключи, <code>CHECK</code>, <code>UNIQUE</code>)</li><li><b>Isolation</b> — параллельные транзакции не мешают друг другу (насколько — задаёт уровень изоляции)</li><li><b>Durability</b> — подтверждённое не потеряется при сбое (журнал WAL сбрасывается на диск до ответа «COMMIT»)</li></ul></div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">12.2 Индексы, транзакции, изоляция, блокировки</div>
+<div class="box"><h3>Уровни изоляции и аномалии:</h3><div class="tbl"><table><thead><tr><th>Уровень</th><th>Грязное чтение</th><th>Неповторяющееся чтение</th><th>Фантомы</th><th>Аномалия сериализации</th></tr></thead><tbody><tr><td>Read Uncommitted</td><td>возможно (в PostgreSQL — нет)</td><td>возможно</td><td>возможно</td><td>возможно</td></tr><tr><td><b>Read Committed</b> (PostgreSQL по умолчанию)</td><td>нет</td><td>возможно</td><td>возможно</td><td>возможно</td></tr><tr><td>Repeatable Read</td><td>нет</td><td>нет</td><td>в стандарте возможно, в PostgreSQL — нет</td><td>возможно</td></tr><tr><td>Serializable</td><td>нет</td><td>нет</td><td>нет</td><td>нет</td></tr></tbody></table></div>
+<ul><li><b>неповторяющееся чтение</b>: в одной транзакции прочитал строку дважды — значения разные, потому что между чтениями кто-то закоммитил изменение</li><li><b>фантом</b>: повторный запрос с тем же условием вернул новые строки</li><li><b>потерянное обновление</b>: обе транзакции прочитали баланс 100, обе записали «100 − 30» — одно списание пропало. Лечится атомарным <code>UPDATE … SET balance = balance - 30</code>, <code>SELECT … FOR UPDATE</code> или оптимистической версией</li><li>PostgreSQL реализует изоляцию через <b>MVCC</b>: у строки несколько версий, читатель видит снимок и не блокирует писателя. Repeatable Read в нём — изоляция снимка. Serializable (SSI) может отменить транзакцию с ошибкой сериализации — приложение обязано <b>повторить</b> её</li></ul></div>
+<div class="box"><h3>Блокировки:</h3><ul><li><code>SELECT … FOR UPDATE</code> — заблокировать строки до конца транзакции (пессимистично). <code>NOWAIT</code> — сразу ошибка, если занято; <code>SKIP LOCKED</code> — пропустить занятые строки (очередь задач в таблице: каждый воркер берёт свои)</li><li><b>оптимистичная блокировка</b>: столбец <code>version</code>, <code>UPDATE … WHERE id = ? AND version = ?</code>; обновилось 0 строк — кто-то успел раньше, перечитать и повторить. Хороша, когда конфликты редки</li><li><b>deadlock</b> между транзакциями — база найдёт цикл и отменит одну. Лечится одинаковым порядком обновления строк и короткими транзакциями</li></ul></div>
+<div class="box quiz" id="q122-2" data-id="q122-2" data-kind="choice">
+<h3><span class="qkind">Выбери</span><span>Два запроса одновременно покупают последний товар: <code>SELECT stock …; if stock &gt; 0: UPDATE products SET stock = stock - 1</code>. На Read Committed что может произойти и как исправить?<span class="tag">· частый вопрос на собесе</span></span></h3>
+
+<div class="qopts" role="group">
+<label data-correct="0"><input type="radio" name="q122-2" id="q122-2-o0"><span>ничего, транзакция защищает</span></label>
+<label data-correct="1"><input type="radio" name="q122-2" id="q122-2-o1"><span>оба прочитают <code>stock = 1</code> и оба продадут — товар уйдёт в минус; исправить атомарным условным <code>UPDATE … SET stock = stock - 1 WHERE id = ? AND stock &gt; 0</code> (проверить число изменённых строк), или <code>SELECT … FOR UPDATE</code>, или <code>CHECK (stock &gt;= 0)</code></span></label>
+<label data-correct="0"><input type="radio" name="q122-2" id="q122-2-o2"><span>база выдаст deadlock</span></label>
+<label data-correct="0"><input type="radio" name="q122-2" id="q122-2-o3"><span>второй запрос всегда увидит обновлённое значение</span></label>
+</div>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Почему</b><p>Read Committed не защищает от гонки «прочитал — решил — записал». Самое простое и быстрое решение — перенести проверку внутрь <code>UPDATE</code>: строка блокируется на время обновления, второй запрос дождётся и увидит <code>stock = 0</code>. Ограничение <code>CHECK</code> — страховка на уровне данных.</p></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">12.2 Индексы, транзакции, изоляция, блокировки</div>
+<div class="box hw" data-lesson="122"><h3>Домашка 12.2 <span class="count"></span></h3>
+<div class="task" data-test="test_transfer"><label><input type="checkbox" id="t122-1"><span><code>transfer</code> — перевод между счетами в одной транзакции; недостаточно средств — <code>InsufficientFunds</code>, балансы не меняются</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>with conn:</code> (sqlite3 сам сделает COMMIT или ROLLBACK). Списание — условным <code>UPDATE accounts SET balance = balance - ? WHERE id = ? AND balance &gt;= ?</code>; если <code>rowcount == 0</code> — проверь, существует ли счёт (<code>ValueError</code>), иначе <code>InsufficientFunds</code>. Затем зачисление; несуществующий получатель — <code>ValueError</code>.</p><p><b>Подвох.</b> Исключение внутри <code>with conn:</code> откатит и уже выполненное списание — это и нужно. Не читай баланс в Python, чтобы потом записать новый: это потерянное обновление.</p></details></div>
+<div class="task" data-test="test_get_or_create"><label><input type="checkbox" id="t122-2"><span><code>get_or_create_user</code> — найти пользователя по email или создать; повторный вызов не создаёт дубль, email нормализуется (обрезка пробелов, нижний регистр)</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>INSERT INTO users(email) VALUES (?) ON CONFLICT(email) DO NOTHING</code>, затем <code>SELECT id</code>. <code>created</code> — <code>cursor.rowcount == 1</code> у вставки.</p><p><b>Подвох.</b> «Сначала SELECT, потом INSERT» — гонка check-then-act между двумя процессами. <code>UNIQUE</code> в схеме — настоящая защита.</p></details></div>
+<div class="task" data-test="test_upsert_products"><label><input type="checkbox" id="t122-3"><span><code>upsert_products</code> — пакетно вставить или обновить товары по <code>sku</code></span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Один <code>executemany</code> с <code>INSERT … ON CONFLICT(sku) DO UPDATE SET name = excluded.name, price = excluded.price</code> внутри транзакции.</p><p><b>Подвох.</b> Тест загружает 50 000 строк: запрос на каждую строку с отдельным коммитом не уложится. Количество строк в таблице после повторной загрузки не должно расти.</p></details></div>
+<div class="task" data-test="test_optimistic"><label><input type="checkbox" id="t122-4"><span><code>withdraw_optimistic</code> — списание с оптимистической блокировкой: прочитать <code>(balance, version)</code>, проверить, обновить <code>WHERE version = ?</code>, при конфликте повторить до <code>attempts</code> раз</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Цикл попыток: <code>SELECT balance, version</code>; если не хватает — <code>InsufficientFunds</code>; <code>UPDATE … SET balance = ?, version = version + 1 WHERE id = ? AND version = ?</code>. <code>rowcount == 1</code> — успех, иначе следующая попытка. Все попытки исчерпаны — <code>ConflictError</code>.</p><p><b>Подвох.</b> Тест вмешивается между чтением и записью (через <code>before_write</code>-колбэк), имитируя конкурентную транзакцию. Каждая итерация — своя транзакция.</p></details></div>
+<div class="task" data-test="test_indexes"><label><input type="checkbox" id="t122-5"><span><code>INDEXES ★</code> — ускорь медленный запрос: напиши <code>CREATE INDEX</code>, чтобы SQLite читал только индекс, без сортировки и без обращения к таблице</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Запрос: <code>SELECT created_at, total FROM orders WHERE user_id = ? AND status = &#x27;paid&#x27; ORDER BY created_at DESC LIMIT 20</code>. Равенства — первыми столбцами индекса, затем столбец сортировки, затем недостающий столбец из <code>SELECT</code>.</p><p><b>Подвох.</b> Тест читает <code>EXPLAIN QUERY PLAN</code>: должен быть <code>COVERING INDEX</code> и не должно быть <code>USE TEMP B-TREE FOR ORDER BY</code>. Индекс только по <code>user_id</code> не годится: останется сортировка и чтение таблицы.</p></details></div>
+<div class="run"><code>python3 pycourse/check.py 122</code><button type="button" class="copy">Копировать</button></div></div>
+<div class="box"><h3>Вопросы с собеседования по уроку:</h3></div>
+<div class="box quiz" id="q122-3" data-id="q122-3" data-kind="open">
+<h3><span class="qkind">Вопрос с собеса</span><span>Как работают индексы и когда они не помогают? Как бы ты ускорил медленный запрос?</span></h3>
+
+<textarea id="in-q122-3" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>B-tree-индекс хранит отсортированные ключи со ссылками на строки, поиск — O(log n) с малой высотой, плюс быстрые диапазоны и сортировка. Составной индекс работает по левому префиксу: сначала столбцы с равенством, затем диапазон или сортировка. Покрывающий индекс (<code>INCLUDE</code>) позволяет Index Only Scan. Индекс не помогает при функции над столбцом, <code>LIKE &#x27;%…&#x27;</code>, низкой селективности, условии не на префикс, приведении типов, на маленьких таблицах и при устаревшей статистике; каждый индекс замедляет запись и занимает место. Алгоритм ускорения: найти запрос (<code>pg_stat_statements</code>, slow log), посмотреть <code>EXPLAIN (ANALYZE, BUFFERS)</code> — где время, Seq Scan по большой таблице, сортировка на диск, расхождение оценок и факта; затем — подходящий индекс (составной, частичный <code>WHERE status = &#x27;paid&#x27;</code>, по выражению), переписать запрос (убрать функцию со столбца, <code>EXISTS</code> вместо <code>IN</code>, keyset-пагинация вместо <code>OFFSET</code>), <code>ANALYZE</code> для статистики, уменьшить выборку (только нужные столбцы, <code>LIMIT</code>), убрать N+1 на стороне приложения, денормализация или материализованное представление для тяжёлой аналитики, кэш. Проверить результат тем же <code>EXPLAIN ANALYZE</code>.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q122-3-p0"><span>B-tree, O(log n), диапазоны и сортировка</span></label><label><input type="checkbox" id="q122-3-p1"><span>составной индекс и левый префикс, покрывающий</span></label><label><input type="checkbox" id="q122-3-p2"><span>случаи, когда индекс не помогает; цена на запись</span></label><label><input type="checkbox" id="q122-3-p3"><span>EXPLAIN ANALYZE и что в нём искать</span></label><label><input type="checkbox" id="q122-3-p4"><span>методы: индексы, переписать запрос, статистика, keyset, N+1, кэш</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+<div class="box quiz" id="q122-4" data-id="q122-4" data-kind="open">
+<h3><span class="qkind">Вопрос с собеса</span><span>Расскажи про уровни изоляции транзакций. Какие аномалии они предотвращают? Какой уровень по умолчанию в PostgreSQL?</span></h3>
+
+<textarea id="in-q122-4" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>Стандарт SQL определяет четыре уровня по допускаемым аномалиям. Read Uncommitted допускает грязное чтение (видны незакоммиченные изменения других транзакций) — в PostgreSQL он ведёт себя как Read Committed. Read Committed (по умолчанию в PostgreSQL) — каждый запрос видит снимок на свой момент, поэтому возможны неповторяющееся чтение и фантомы, а также потерянное обновление при схеме «прочитал — изменил в приложении — записал». Repeatable Read — снимок на начало транзакции; в PostgreSQL это snapshot isolation, фантомов нет, но возможна аномалия write skew (две транзакции читают пересекающиеся данные и пишут разные строки, нарушая общий инвариант — например, «хотя бы один врач на дежурстве»); при конфликте записи одна транзакция получает ошибку сериализации. Serializable в PostgreSQL — SSI: результат эквивалентен последовательному выполнению, конфликтующие транзакции отменяются, и приложение должно их повторять. Реализация — MVCC: читатели не блокируют писателей. На практике — Read Committed плюс точечные средства: атомарные условные <code>UPDATE</code>, <code>SELECT FOR UPDATE</code>, оптимистичные версии, ограничения <code>UNIQUE</code>/<code>CHECK</code>, а Serializable — для сложных инвариантов с ретраями.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q122-4-p0"><span>четыре уровня и аномалии: грязное, неповторяющееся, фантомы</span></label><label><input type="checkbox" id="q122-4-p1"><span>Read Committed по умолчанию в PostgreSQL</span></label><label><input type="checkbox" id="q122-4-p2"><span>MVCC и снимки</span></label><label><input type="checkbox" id="q122-4-p3"><span>потерянное обновление и write skew</span></label><label><input type="checkbox" id="q122-4-p4"><span>Serializable требует повторов</span></label><label><input type="checkbox" id="q122-4-p5"><span>практические средства: атомарный UPDATE, FOR UPDATE, версии</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<div class="part" id="m13"><b>Модуль 13</b><h2>Веб-бэкенд</h2></div>
+<section class="sheet" id="l131"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">13.1 HTTP, REST и сеть</div>
+<div class="box"><h3>Что происходит, когда вводишь URL (вопрос в 23% интервью):</h3><ol><li><b>Разбор URL</b> и проверка кэшей: HSTS (сразу HTTPS), кэш браузера</li><li><b>DNS</b>: кэш браузера и ОС → резолвер провайдера → корневые серверы → TLD → авторитетный сервер; получаем IP (запись A/AAAA, возможно через CNAME)</li><li><b>TCP</b>: тройное рукопожатие SYN → SYN-ACK → ACK (в HTTP/3 вместо TCP — QUIC поверх UDP)</li><li><b>TLS</b>: согласование версии и шифров, сертификат сервера проверяется по цепочке до доверенного корня, обмен ключами (ECDHE) → симметричное шифрование. TLS 1.3 — одна поездка туда-обратно</li><li><b>HTTP-запрос</b>: <code>GET / HTTP/1.1</code>, заголовки <code>Host</code>, <code>Cookie</code>, <code>Accept-Encoding</code>…</li><li><b>На стороне сервера</b>: CDN или балансировщик → reverse proxy (nginx) → сервер приложения (gunicorn/uvicorn) → фреймворк → БД и кэши → ответ</li><li><b>Ответ</b>: статус, заголовки (<code>Content-Type</code>, <code>Cache-Control</code>, <code>Set-Cookie</code>), тело (часто сжатое gzip/br)</li><li><b>Браузер</b>: разбирает HTML, строит DOM, догружает CSS, JS и картинки (повторно используя соединение), рендерит</li></ol>
+<p>Хороший ответ — уверенно по шагам, с готовностью углубиться в любой: DNS-кэширование и TTL, что внутри TLS, как балансировщик выбирает бэкенд.</p></div>
+<div class="box"><h3>TCP и UDP:</h3><div class="tbl"><table><thead><tr><th></th><th>TCP</th><th>UDP</th></tr></thead><tbody><tr><td>соединение</td><td>есть (рукопожатие)</td><td>нет</td></tr><tr><td>доставка</td><td>гарантированная, по порядку, с повторами</td><td>без гарантий</td></tr><tr><td>управление потоком и перегрузкой</td><td>есть</td><td>нет</td></tr><tr><td>где</td><td>HTTP/1–2, БД, почта</td><td>DNS, видео и голос, игры, QUIC (HTTP/3)</td></tr></tbody></table></div></div>
+<div class="box"><h3>Версии HTTP:</h3><ul><li><b>HTTP/1.1</b> — keep-alive (несколько запросов в одном соединении, но по очереди — head-of-line blocking), поэтому браузеры открывают по 6 соединений на хост</li><li><b>HTTP/2</b> — бинарный протокол, мультиплексирование потоков в одном соединении, сжатие заголовков (HPACK)</li><li><b>HTTP/3</b> — поверх QUIC (UDP): потеря пакета не тормозит остальные потоки, быстрое установление соединения, миграция при смене сети</li></ul></div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">13.1 HTTP, REST и сеть</div>
+<div class="box"><h3>Методы — безопасность и идемпотентность:</h3><div class="tbl"><table><thead><tr><th>Метод</th><th>Безопасный (не меняет состояние)</th><th>Идемпотентный (повтор = тот же эффект)</th><th>Тело</th></tr></thead><tbody><tr><td>GET, HEAD, OPTIONS</td><td>да</td><td>да</td><td>нет</td></tr><tr><td>PUT</td><td>нет</td><td><b>да</b>: заменяет ресурс целиком</td><td>да</td></tr><tr><td>DELETE</td><td>нет</td><td><b>да</b>: второй раз удалять уже нечего</td><td>обычно нет</td></tr><tr><td>POST</td><td>нет</td><td><b>нет</b>: два POST — два заказа</td><td>да</td></tr><tr><td>PATCH</td><td>нет</td><td>не обязательно</td><td>да</td></tr></tbody></table></div>
+<p><b>Ключ идемпотентности</b>: клиент генерирует <code>Idempotency-Key</code> и шлёт его с POST. Сервер запоминает ответ по ключу; повтор (после таймаута, сбоя сети) получает тот же ответ, а операция не выполняется второй раз. Если с тем же ключом пришло <b>другое</b> тело — ошибка 409/422. Так делают платёжные API (Stripe, ЮKassa).</p></div>
+<div class="box"><h3>Коды ответов, которые надо знать:</h3><div class="tbl"><table><thead><tr><th>Код</th><th>Когда</th></tr></thead><tbody><tr><td>200, 201 (+ <code>Location</code>), 204</td><td>успех, создано, нет тела</td></tr><tr><td>301 / 302 / 307 / 308</td><td>перенаправления: постоянное или временное; 307 и 308 сохраняют метод</td></tr><tr><td>304</td><td>не изменилось (условный запрос с <code>ETag</code>/<code>If-None-Match</code>)</td></tr><tr><td>400, 422</td><td>плохой запрос, ошибка валидации (FastAPI отдаёт 422)</td></tr><tr><td>401 / 403</td><td>не аутентифицирован / аутентифицирован, но нет прав</td></tr><tr><td>404, 405, 409</td><td>нет ресурса, метод не поддерживается, конфликт состояния</td></tr><tr><td>429</td><td>слишком много запросов (+ <code>Retry-After</code>)</td></tr><tr><td>500, 502, 503, 504</td><td>ошибка сервера, плохой ответ апстрима, недоступен, таймаут апстрима</td></tr></tbody></table></div></div>
+<div class="box quiz" id="q131-1" data-id="q131-1" data-kind="choice">
+<h3><span class="qkind">Выбери</span><span>Клиент отправил <code>POST /payments</code>, соединение оборвалось по таймауту, ответа нет. Клиент не знает, прошёл ли платёж. Как спроектировать API, чтобы повтор был безопасен?<span class="tag">· частый вопрос на собесе</span></span></h3>
+
+<div class="qopts" role="group">
+<label data-correct="0"><input type="radio" name="q131-1" id="q131-1-o0"><span>запретить клиенту повторять запросы</span></label>
+<label data-correct="0"><input type="radio" name="q131-1" id="q131-1-o1"><span>заменить POST на GET</span></label>
+<label data-correct="1"><input type="radio" name="q131-1" id="q131-1-o2"><span>клиент передаёт уникальный <code>Idempotency-Key</code>; сервер атомарно сохраняет ключ вместе с результатом, а на повтор с тем же ключом возвращает сохранённый ответ, не проводя платёж снова</span></label>
+<label data-correct="0"><input type="radio" name="q131-1" id="q131-1-o3"><span>проверять, нет ли платежа с такой же суммой за последнюю минуту</span></label>
+</div>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Почему</b><p>Повторы неизбежны: таймауты, ретраи в клиентах и балансировщиках. Проверка «такая же сумма» ломает законные повторные покупки. Ключ нужно сохранять в той же транзакции, что и сам платёж (или с уникальным ограничением), а параллельный повтор, пока первый ещё выполняется, должен ждать или получить 409.</p></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">13.1 HTTP, REST и сеть</div>
+<div class="box"><h3>REST — договорённости:</h3><ul><li>ресурсы — существительные во множественном числе: <code>GET /users/42/orders</code>, а не <code>/getUserOrders</code></li><li>действие выражает метод; для операций, которые не ложатся на CRUD, — подресурс: <code>POST /orders/42/cancel</code></li><li>фильтры, сортировка, пагинация — в query: <code>?status=paid&amp;sort=-created_at&amp;limit=20&amp;cursor=…</code></li><li><b>пагинация</b>: <code>OFFSET</code> медленный на дальних страницах и «пляшет» при вставках → курсорная (keyset): <code>WHERE (created_at, id) &lt; (:last_created, :last_id) ORDER BY created_at DESC, id DESC LIMIT 20</code></li><li>версионирование: <code>/v1/…</code> или заголовок; обратно совместимые изменения — только добавление полей</li><li>ошибки — единым форматом (RFC 9457 Problem Details: <code>type</code>, <code>title</code>, <code>detail</code>)</li></ul></div>
+<div class="box"><h3>Аутентификация:</h3><div class="tbl"><table><thead><tr><th></th><th>Сессия + cookie</th><th>JWT</th></tr></thead><tbody><tr><td>где состояние</td><td>на сервере (Redis, БД)</td><td>в самом токене, подписанном сервером</td></tr><tr><td>отзыв</td><td>удалить сессию — мгновенно</td><td>сложно: короткий срок жизни плюс refresh-токен и чёрный список</td></tr><tr><td>масштабирование</td><td>нужно общее хранилище сессий</td><td>проверка подписи без обращения к хранилищу</td></tr><tr><td>риски</td><td>CSRF (нужны <code>SameSite</code>, CSRF-токен)</td><td>кража токена; нельзя хранить секреты в payload — он только подписан, не зашифрован</td></tr></tbody></table></div>
+<p>JWT — три части в base64url: <code>header.payload.signature</code>, подпись HS256 = HMAC-SHA256 от <code>header.payload</code> общим секретом (или RS256/ES256 — асимметричная пара ключей). <b>OAuth 2.0</b> — делегирование доступа (вход через Google), <b>OpenID Connect</b> — аутентификация поверх него.</p>
+<p><b>CORS</b> — браузер не даёт JS с одного источника читать ответы другого, пока сервер не разрешит (<code>Access-Control-Allow-Origin</code>; для «непростых» запросов — предварительный <code>OPTIONS</code>). Это защита пользователей браузера, а не сервера: <code>curl</code> CORS не знает.</p></div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">13.1 HTTP, REST и сеть</div>
+<div class="box hw" data-lesson="131"><h3>Домашка 13.1 <span class="count"></span></h3>
+<div class="task" data-test="test_parse_request"><label><input type="checkbox" id="t131-1"><span><code>parse_request</code> — разобрать сырой HTTP/1.1-запрос в байтах: метод, путь, параметры query, заголовки без учёта регистра, тело по <code>Content-Length</code></span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Раздели по <code>b&quot;\r\n\r\n&quot;</code> на заголовки и тело. Первая строка — <code>метод цель версия</code>. <code>urllib.parse.urlsplit</code> и <code>parse_qs</code> для пути и query. Заголовки — в словарь с ключами в нижнем регистре; <code>partition(&quot;:&quot;)</code> и <code>strip()</code>. Тело — первые <code>Content-Length</code> байт.</p><p><b>Подвох.</b> Значение заголовка может содержать <code>:</code> (<code>Host: example.com:8080</code>). Повторяющийся параметр query — список значений. Битый запрос (нет пустой строки после заголовков, кривая стартовая строка) — <code>ValueError</code>.</p></details></div>
+<div class="task" data-test="test_router"><label><input type="checkbox" id="t131-2"><span><code>Router</code> — маршрутизатор с параметрами пути <code>/users/{id:int}/orders/{name}</code> и различием 404 и 405</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>add(method, pattern, handler)</code> преобразует шаблон в регулярное выражение: <code>{id:int}</code> → <code>(?P&lt;id&gt;\d+)</code>, <code>{name}</code> → <code>(?P&lt;name&gt;[^/]+)</code>. <code>resolve(method, path)</code> перебирает маршруты; совпал путь и метод — вернуть <code>(handler, params)</code> с приведёнными типами.</p><p><b>Подвох.</b> Путь совпал, а метод нет — <code>MethodNotAllowed</code> с набором допустимых методов (для заголовка <code>Allow</code>), ничего не совпало — <code>NotFound</code>. <code>re.fullmatch</code>, иначе <code>/users/1/extra</code> совпадёт с <code>/users/{id}</code>.</p></details></div>
+<div class="task" data-test="test_idempotency"><label><input type="checkbox" id="t131-3"><span><code>IdempotencyStore</code> — хранилище ответов по ключу идемпотентности</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>run(key, body, handler)</code>: если ключа нет — вызвать <code>handler()</code>, сохранить <code>(хеш тела, ответ)</code>, вернуть ответ. Если ключ есть и хеш совпал — вернуть сохранённое, не вызывая <code>handler</code>. Если тело другое — <code>IdempotencyConflict</code>. Если <code>handler</code> упал — ничего не сохранять.</p><p><b>Подвох.</b> Хеш тела — <code>hashlib.sha256(body).hexdigest()</code>, тело — <code>bytes</code>. Ключи живут <code>ttl</code> секунд (часы — параметром).</p></details></div>
+<div class="task" data-test="test_jwt"><label><input type="checkbox" id="t131-4"><span><code>jwt_encode</code> / <code>jwt_decode ★</code> — JWT HS256 на <code>hmac</code> и <code>base64</code> без библиотек</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> base64url без <code>=</code> в конце: <code>base64.urlsafe_b64encode(b).rstrip(b&quot;=&quot;)</code>; при декодировании добавь <code>=</code> до кратности 4. Заголовок <code>{&quot;alg&quot;: &quot;HS256&quot;, &quot;typ&quot;: &quot;JWT&quot;}</code>, JSON — <code>json.dumps(…, separators=(&quot;,&quot;, &quot;:&quot;))</code>. Подпись — <code>hmac.new(secret, f&quot;{h}.{p}&quot;.encode(), hashlib.sha256).digest()</code>.</p><p><b>Подвох.</b> Сравнивай подписи через <code>hmac.compare_digest</code>, а не <code>==</code> (атака по времени). Проверь <code>alg == &quot;HS256&quot;</code> (атака <code>alg: none</code>). Истёкший <code>exp</code> (часы — параметром) — <code>TokenExpired</code>, плохая подпись или формат — <code>InvalidToken</code>.</p></details></div>
+<div class="run"><code>python3 pycourse/check.py 131</code><button type="button" class="copy">Копировать</button></div></div>
+<div class="box"><h3>Вопросы с собеседования по уроку:</h3></div>
+<div class="box quiz" id="q131-2" data-id="q131-2" data-kind="open">
+<h3><span class="qkind">Вопрос с собеса</span><span>Чем отличаются PUT, PATCH и POST? Что такое идемпотентность и зачем она бэкенду?</span></h3>
+
+<textarea id="in-q131-2" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>POST создаёт ресурс или запускает действие; не идемпотентен — два одинаковых POST создадут два заказа. PUT заменяет ресурс целиком по известному адресу (или создаёт его там); идемпотентен — повтор даёт то же состояние. PATCH частично изменяет ресурс; идемпотентность не гарантирована (<code>{&quot;op&quot;: &quot;increment&quot;}</code> — нет, <code>{&quot;name&quot;: &quot;x&quot;}</code> — да). GET, HEAD, OPTIONS — безопасные (не меняют состояние) и идемпотентные; DELETE — идемпотентен по эффекту, хотя код ответа при повторе может быть 404. Идемпотентность нужна, потому что в распределённой системе повторы неизбежны: таймауты, обрывы сети, автоматические ретраи в клиентах, балансировщиках и очередях. Если операция идемпотентна, её можно безопасно повторить. Для неидемпотентных операций (платежи, создание заказа) используют ключ идемпотентности: клиент генерирует ключ, сервер сохраняет результат по нему атомарно с операцией и на повтор отдаёт сохранённый ответ. Та же идея — в консьюмерах очередей (дедупликация по id сообщения) и в фоновых задачах.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q131-2-p0"><span>семантика POST, PUT, PATCH</span></label><label><input type="checkbox" id="q131-2-p1"><span>безопасные и идемпотентные методы</span></label><label><input type="checkbox" id="q131-2-p2"><span>почему повторы неизбежны</span></label><label><input type="checkbox" id="q131-2-p3"><span>ключ идемпотентности и атомарное сохранение</span></label><label><input type="checkbox" id="q131-2-p4"><span>идемпотентные консьюмеры и задачи</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+<div class="box quiz" id="q131-3" data-id="q131-3" data-kind="open">
+<h3><span class="qkind">Вопрос с собеса</span><span>Сессии или JWT — что выбрать для аутентификации и почему?</span></h3>
+
+<textarea id="in-q131-3" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>Сессия: сервер хранит состояние (в Redis или БД), клиент получает cookie с непредсказуемым идентификатором (<code>HttpOnly</code>, <code>Secure</code>, <code>SameSite</code>). Плюсы — мгновенный отзыв (выход, бан, смена пароля), маленькая cookie, секреты не уходят клиенту. Минусы — нужно общее хранилище сессий и обращение к нему на каждый запрос, защита от CSRF. JWT: подписанный токен с данными (id пользователя, роли, <code>exp</code>), проверяется без хранилища по подписи — удобно для микросервисов и сторонних клиентов. Минусы — трудно отозвать до истечения срока, поэтому короткий access-токен (минуты) плюс refresh-токен (хранится и отзывается на сервере), в payload нельзя класть секреты, токен растёт, частые ошибки реализации (<code>alg: none</code>, слабый секрет, отсутствие проверки <code>exp</code> и <code>aud</code>). Для классического веб-приложения с браузером обычно проще и безопаснее сессии. Для API с мобильными клиентами и межсервисных вызовов — JWT (часто выпускаемые внешним Identity Provider по OAuth 2.0/OIDC), с коротким сроком жизни. Где хранить в браузере: <code>HttpOnly</code>-cookie лучше <code>localStorage</code> (XSS не украдёт).</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q131-3-p0"><span>состояние на сервере против в токене</span></label><label><input type="checkbox" id="q131-3-p1"><span>отзыв: мгновенный против сложного, refresh-токены</span></label><label><input type="checkbox" id="q131-3-p2"><span>масштабирование и микросервисы</span></label><label><input type="checkbox" id="q131-3-p3"><span>риски: CSRF против кражи токена и ошибок реализации</span></label><label><input type="checkbox" id="q131-3-p4"><span>рекомендации по выбору и хранению</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<section class="sheet" id="l132"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">13.2 WSGI, ASGI, Django и FastAPI</div>
+<div class="box"><h3>WSGI и ASGI:</h3><p><b>WSGI</b> (PEP 3333) — синхронный контракт между веб-сервером и приложением: приложение — вызываемый объект <code>app(environ, start_response)</code>, который возвращает итерируемое тело.</p>
+<pre><code><span class="k">def</span> app(environ, start_response):
+    body = <span class="s">b&#x27;{&quot;status&quot;: &quot;ok&quot;}&#x27;</span>
+    start_response(<span class="s">&quot;200 OK&quot;</span>, [(<span class="s">&quot;Content-Type&quot;</span>, <span class="s">&quot;application/json&quot;</span>),
+                              (<span class="s">&quot;Content-Length&quot;</span>, str(len(body)))])
+    <span class="k">return</span> [body]</code></pre>
+<p>Один запрос занимает воркер (процесс или поток) до конца: долгие соединения (WebSocket, стриминг) так не держат. Серверы — gunicorn, uWSGI. Фреймворки — Django (классически), Flask.</p>
+<p><b>ASGI</b> — асинхронный контракт: <code>async def app(scope, receive, send)</code>. События приходят и уходят сообщениями: <code>http.request</code> (тело, возможно кусками с <code>more_body</code>), <code>http.response.start</code>, <code>http.response.body</code>, плюс <code>websocket.*</code> и <code>lifespan.*</code> (старт и остановка приложения). Серверы — uvicorn, hypercorn, granian. Фреймворки — FastAPI/Starlette, Django (с 3.0), Litestar.</p></div>
+<div class="box"><h3>Как запускают в продакшене:</h3><ul><li><b>gunicorn</b> с N процессами-воркерами (обычно <code>2 × ядра + 1</code> для синхронных); для ASGI — <code>uvicorn.workers.UvicornWorker</code> или сам <code>uvicorn --workers N</code></li><li>типы воркеров: <code>sync</code> (запрос на процесс), <code>gthread</code> (потоки), асинхронные (uvicorn): тысячи соединений в одном процессе</li><li>перед ними — nginx или балансировщик: TLS, статика, буферизация медленных клиентов, ограничения</li><li><code>max_requests</code> — перезапуск воркера после N запросов как страховка от утечек памяти; <code>timeout</code>, graceful shutdown по SIGTERM</li></ul></div>
+<div class="box quiz" id="q132-1" data-id="q132-1" data-kind="output" data-answer="до A
+до B
+app
+после B
+после A">
+<h3><span class="qkind">Что выведет?</span><span>Что выведет программа?<span class="tag">· частый вопрос на собесе</span></span></h3>
+<pre><code><span class="k">def</span> app(environ, start_response):
+    print(<span class="s">&quot;app&quot;</span>)
+    start_response(<span class="s">&quot;200 OK&quot;</span>, [])
+    <span class="k">return</span> [<span class="s">b&quot;ok&quot;</span>]
+
+<span class="k">def</span> middleware(name, inner):
+    <span class="k">def</span> wrapped(environ, start_response):
+        print(<span class="s">&quot;до&quot;</span>, name)
+        result = inner(environ, start_response)
+        print(<span class="s">&quot;после&quot;</span>, name)
+        <span class="k">return</span> result
+    <span class="k">return</span> wrapped
+
+handler = middleware(<span class="s">&quot;A&quot;</span>, middleware(<span class="s">&quot;B&quot;</span>, app))
+handler({}, <span class="k">lambda</span> status, headers: <span class="k">None</span>)</code></pre>
+<textarea id="in-q132-1" rows="3" spellcheck="false" placeholder="Напиши, что напечатает программа, строка в строку. Если упадёт — последней строкой имя исключения" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Вывод</b><pre><code>до A
+до B
+app
+после B
+после A</code></pre><p>Middleware — это «луковица» из декораторов вокруг приложения: запрос проходит слои снаружи внутрь, ответ — изнутри наружу. Так устроены и <code>MIDDLEWARE</code> в Django (первый в списке — самый внешний), и middleware в Starlette/FastAPI. Отсюда вопросы «в каком порядке выполнятся middleware» и «почему аутентификация должна стоять раньше логирования пользователя».</p></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">13.2 WSGI, ASGI, Django и FastAPI</div>
+<div class="box"><h3>Django — что спрашивают:</h3><ul><li><b>жизненный цикл запроса</b>: WSGI/ASGI-хендлер → middleware (<code>process_request</code>, …) → URL-резолвер → view → ORM, шаблоны → ответ обратно через middleware</li><li><b>QuerySet ленивый</b>: запрос в БД уходит при итерации, <code>len</code>, <code>list</code>, срезе с шагом, <code>bool</code>. Результат кэшируется в QuerySet. Цепочки <code>filter().exclude().order_by()</code> ничего не выполняют до вычисления</li><li><b>N+1</b>: <code>select_related</code> — JOIN для ForeignKey и OneToOne (один запрос); <code>prefetch_related</code> — отдельный запрос для обратных связей и ManyToMany и склейка в Python. Обнаруживать — django-debug-toolbar, <code>assertNumQueries</code> в тестах</li><li><code>F()</code> — ссылка на столбец в выражении (<code>update(stock=F(&quot;stock&quot;) - 1)</code> атомарно в БД); <code>Q()</code> — сложные условия с <code>|</code> и <code>~</code>; <code>annotate</code>/<code>aggregate</code></li><li><b>транзакции</b>: <code>transaction.atomic()</code> (вложенные — savepoints), <code>select_for_update()</code>, <code>on_commit()</code> для отправки задач после коммита (иначе Celery-задача может стартовать раньше, чем данные появятся в БД)</li><li><b>сигналы</b> (<code>post_save</code>) — неявная связность и скрытые запросы; не срабатывают на <code>bulk_create</code> и <code>update()</code></li><li><b>миграции на больших таблицах</b>: добавление столбца с дефолтом, индексы (<code>AddIndexConcurrently</code>), разделение схемы и данных, обратная совместимость при выкатке</li></ul></div>
+<div class="box"><h3>FastAPI — что спрашивают:</h3><ul><li>построен на Starlette (ASGI) и pydantic: аннотации параметров → валидация, сериализация и OpenAPI-схема</li><li>**<code>async def</code> против <code>def</code>** эндпоинта: <code>async def</code> выполняется в цикле событий (внутри — только неблокирующие вызовы), <code>def</code> — в пуле потоков. Блокирующий вызов в <code>async def</code> замораживает весь воркер (урок 5.3)</li><li>**<code>Depends</code>** — внедрение зависимостей: функция-зависимость (в том числе с <code>yield</code> для очистки, как сессия БД), граф зависимостей разрешается на каждый запрос, одна зависимость в одном запросе вычисляется <b>один раз</b>; <code>app.dependency_overrides</code> — подмена в тестах</li><li><b>pydantic v2</b>: ядро на Rust, <code>model_validate</code>, <code>model_dump</code>, <code>field_validator</code>, <code>ConfigDict(from_attributes=True)</code> для ORM-объектов</li><li><code>BackgroundTasks</code> — после ответа в том же процессе (не замена очереди), <code>lifespan</code> — ресурсы на время жизни приложения (пул БД, HTTP-клиент)</li></ul></div>
+<div class="box quiz" id="q132-2" data-id="q132-2" data-kind="choice">
+<h3><span class="qkind">Выбери</span><span>В Django-представлении <code>for order in Order.objects.all(): print(order.customer.name)</code>. Заказов 1000. Сколько запросов уйдёт в БД и как исправить?<span class="tag">· частый вопрос на собесе</span></span></h3>
+
+<div class="qopts" role="group">
+<label data-correct="0"><input type="radio" name="q132-2" id="q132-2-o0"><span>1, Django всё кэширует</span></label>
+<label data-correct="1"><input type="radio" name="q132-2" id="q132-2-o1"><span>1 001: один за заказами и по одному за покупателем на каждый заказ; <code>Order.objects.select_related(&quot;customer&quot;)</code> даст один запрос с JOIN</span></label>
+<label data-correct="0"><input type="radio" name="q132-2" id="q132-2-o2"><span>2: заказы и все покупатели</span></label>
+<label data-correct="0"><input type="radio" name="q132-2" id="q132-2-o3"><span>1 000</span></label>
+</div>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Почему</b><p>Классическая проблема N+1. Для ForeignKey — <code>select_related</code> (JOIN). Для обратной связи (<code>customer.orders</code>) или ManyToMany — <code>prefetch_related</code>: второй запрос <code>WHERE id IN (...)</code> и склейка в Python. Ещё лучше — выбирать только нужные столбцы (<code>only</code>, <code>values</code>).</p></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">13.2 WSGI, ASGI, Django и FastAPI</div>
+<div class="box hw" data-lesson="132"><h3>Домашка 13.2 <span class="count"></span></h3>
+<div class="task" data-test="test_wsgi_app"><label><input type="checkbox" id="t132-1"><span><code>app</code> — WSGI-приложение: <code>GET /health</code>, <code>GET /hello?name=…</code>, <code>POST /echo</code>, 404 и 405 в JSON</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>method = environ[&quot;REQUEST_METHOD&quot;]</code>, <code>path = environ[&quot;PATH_INFO&quot;]</code>, query — <code>parse_qs(environ.get(&quot;QUERY_STRING&quot;, &quot;&quot;))</code>. Тело POST: <code>environ[&quot;wsgi.input&quot;].read(int(environ.get(&quot;CONTENT_LENGTH&quot;) or 0))</code>. Вспомогательная функция <code>json_response(start_response, status, data, extra_headers=())</code>.</p><p><b>Подвох.</b> На известный путь с другим методом — <code>405 Method Not Allowed</code> с заголовком <code>Allow</code>. Битый JSON в <code>/echo</code> — <code>400</code>. Всегда ставь <code>Content-Type: application/json</code> и <code>Content-Length</code>. Тело ответа — список байтовых строк.</p></details></div>
+<div class="task" data-test="test_timing_middleware"><label><input type="checkbox" id="t132-2"><span><code>timing_middleware</code> — WSGI-middleware: добавляет <code>X-Request-ID</code> (из входящего заголовка или новый) и <code>X-Response-Time-ms</code></span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Обёртка <code>wrapped(environ, start_response)</code>: прочитай <code>environ.get(&quot;HTTP_X_REQUEST_ID&quot;)</code> или создай <code>uuid.uuid4().hex</code>; положи id в <code>environ[&quot;request_id&quot;]</code>; подмени <code>start_response</code> своей функцией, которая дописывает заголовки и вызывает исходную.</p><p><b>Подвох.</b> Время нужно измерить до вызова <code>start_response</code>: заголовки уходят именно в нём, поэтому меряй от входа до момента вызова подменённого <code>start_response</code>. Часы — параметром <code>clock</code>.</p></details></div>
+<div class="task" data-test="test_depends"><label><input type="checkbox" id="t132-3"><span><code>Depends</code> / <code>solve</code> — мини-версия внедрения зависимостей FastAPI</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>Depends(dep)</code> — просто хранит функцию. <code>solve(func, overrides=None)</code> смотрит <code>inspect.signature(func)</code>: для параметров, у которых значение по умолчанию — <code>Depends</code>, рекурсивно вычисляет зависимость (у неё тоже могут быть <code>Depends</code>). Кэш <code>dict</code> «функция → значение» на один вызов <code>solve</code>. <code>overrides</code> подменяет функцию-зависимость.</p><p><b>Подвох.</b> Одна зависимость, нужная в нескольких местах графа, вычисляется <b>один раз</b>. Зависимости-генераторы: значение — первый <code>next()</code>, а после вызова <code>func</code> их нужно закрыть в обратном порядке, даже если <code>func</code> упала (как сессия БД в FastAPI).</p></details></div>
+<div class="task" data-test="test_asgi_app"><label><input type="checkbox" id="t132-4"><span><code>asgi_app ★</code> — минимальное ASGI-приложение: <code>GET /health</code> и <code>POST /echo</code> с телом, пришедшим несколькими кусками</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>scope[&quot;type&quot;] == &quot;http&quot;</code>. Тело: в цикле <code>msg = await receive()</code>, накапливай <code>msg.get(&quot;body&quot;, b&quot;&quot;)</code>, пока <code>msg.get(&quot;more_body&quot;)</code>. Ответ — два вызова <code>send</code>: <code>{&quot;type&quot;: &quot;http.response.start&quot;, &quot;status&quot;: …, &quot;headers&quot;: [(b&quot;content-type&quot;, b&quot;application/json&quot;), …]}</code> и <code>{&quot;type&quot;: &quot;http.response.body&quot;, &quot;body&quot;: …}</code>.</p><p><b>Подвох.</b> Заголовки в ASGI — список пар <b>байтовых</b> строк, имена в нижнем регистре. На <code>lifespan</code>-события ответь <code>lifespan.startup.complete</code> и <code>lifespan.shutdown.complete</code>, иначе сервер не запустится.</p></details></div>
+<div class="run"><code>python3 pycourse/check.py 132</code><button type="button" class="copy">Копировать</button></div></div>
+<div class="box"><h3>Вопросы с собеседования по уроку:</h3></div>
+<div class="box quiz" id="q132-3" data-id="q132-3" data-kind="open">
+<h3><span class="qkind">Вопрос с собеса</span><span>Чем WSGI отличается от ASGI? Когда в FastAPI писать <code>async def</code>, а когда <code>def</code>?</span></h3>
+
+<textarea id="in-q132-3" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>WSGI — синхронный интерфейс: приложение — функция <code>(environ, start_response)</code>, запрос целиком обрабатывается в одном воркере (процесс или поток), конкурентность — числом воркеров. Не подходит для долгих соединений (WebSocket, SSE, long polling) и плохо использует время ожидания I/O. ASGI — асинхронный интерфейс <code>async (scope, receive, send)</code> с обменом сообщениями: поддерживает HTTP, WebSocket и lifespan, один процесс держит тысячи соединений, пока они ждут I/O. Django поддерживает оба, FastAPI/Starlette — ASGI. В FastAPI <code>async def</code>-эндпоинт выполняется прямо в цикле событий: писать его, если внутри только неблокирующие вызовы (<code>await</code> асинхронных драйверов БД, httpx). Если используются синхронные библиотеки (requests, синхронная ORM, тяжёлые расчёты), — обычный <code>def</code>: FastAPI запустит его в пуле потоков, и цикл не заблокируется. Худший вариант — блокирующий вызов в <code>async def</code>: он останавливает обработку всех запросов воркера. CPU-тяжёлое — в процессы или очередь задач.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q132-3-p0"><span>WSGI: синхронный, воркер на запрос</span></label><label><input type="checkbox" id="q132-3-p1"><span>ASGI: события, WebSocket, lifespan, тысячи соединений</span></label><label><input type="checkbox" id="q132-3-p2"><span>async def — в цикле событий, только неблокирующее</span></label><label><input type="checkbox" id="q132-3-p3"><span>def — в пуле потоков для синхронных библиотек</span></label><label><input type="checkbox" id="q132-3-p4"><span>блокирующий вызов в async def — главная ошибка</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+<div class="box quiz" id="q132-4" data-id="q132-4" data-kind="open">
+<h3><span class="qkind">Вопрос с собеса</span><span>Как в Django избежать проблемы N+1? Чем <code>select_related</code> отличается от <code>prefetch_related</code>?</span></h3>
+
+<textarea id="in-q132-4" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>N+1 — когда на каждый объект из списка уходит дополнительный запрос за связанным объектом: 1 запрос за списком + N за связями. В Django это происходит из-за ленивой загрузки связей. <code>select_related</code> делает SQL-JOIN и загружает связанные объекты одним запросом. Работает для «одиночных» связей — ForeignKey и OneToOne в прямую сторону. <code>prefetch_related</code> делает отдельный запрос на каждую связь (<code>WHERE id IN (...)</code>) и склеивает результаты в Python. Нужен для обратных ForeignKey (<code>author.books</code>) и ManyToMany, где JOIN размножил бы строки; объект <code>Prefetch</code> позволяет задать фильтр и <code>select_related</code> для вложенного запроса. Ещё приёмы: <code>only()</code>/<code>values()</code> — брать только нужные столбцы; <code>annotate</code> с агрегатами вместо подсчёта в цикле; обнаружение — django-debug-toolbar, логирование SQL, <code>assertNumQueries</code> в тестах, nplusone.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q132-4-p0"><span>определение N+1 и причина — ленивая загрузка</span></label><label><input type="checkbox" id="q132-4-p1"><span>select_related: JOIN, FK и OneToOne</span></label><label><input type="checkbox" id="q132-4-p2"><span>prefetch_related: отдельный запрос и склейка, обратные связи и M2M</span></label><label><input type="checkbox" id="q132-4-p3"><span>Prefetch, only, annotate</span></label><label><input type="checkbox" id="q132-4-p4"><span>как обнаруживать: debug-toolbar, assertNumQueries</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<div class="part" id="m14"><b>Модуль 14</b><h2>Архитектура и system design</h2></div>
+<section class="sheet" id="l141"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">14.1 Кэши, очереди, фоновые задачи, надёжность</div>
+<div class="box"><h3>Redis — для чего его берут:</h3><div class="tbl"><table><thead><tr><th>Задача</th><th>Структура Redis</th></tr></thead><tbody><tr><td>кэш</td><td>строка с <code>SET key value EX 60</code></td></tr><tr><td>сессии</td><td>хеш, TTL</td></tr><tr><td>счётчики и rate limit</td><td><code>INCR</code> + <code>EXPIRE</code>, Lua-скрипт для атомарности</td></tr><tr><td>распределённая блокировка</td><td><code>SET key token NX PX 30000</code>; снимать — только своим токеном (Lua)</td></tr><tr><td>очереди, брокер Celery</td><td>списки (<code>LPUSH</code>/<code>BRPOP</code>), streams с группами потребителей</td></tr><tr><td>лидерборды</td><td>отсортированные множества (<code>ZADD</code>, <code>ZRANGE</code>)</td></tr><tr><td>pub/sub</td><td>каналы (без гарантий доставки)</td></tr></tbody></table></div>
+<p>Однопоточное выполнение команд → каждая команда атомарна. Персистентность — RDB-снимки и/или AOF-журнал; при заполнении памяти — политика вытеснения (<code>allkeys-lru</code>, <code>volatile-ttl</code>…).</p></div>
+<div class="box"><h3>Стратегии кэширования:</h3><ul><li><b>cache-aside</b> (чаще всего): приложение читает кэш, при промахе — БД, затем пишет в кэш. При изменении данных — <b>удалить</b> ключ (а не обновить: так меньше гонок)</li><li><b>write-through</b>: запись идёт в кэш и БД синхронно</li><li><b>write-behind</b>: запись в кэш, а в БД — асинхронно (быстро, но риск потери)</li><li>проблемы: <b>stampede</b> (одновременный промах горячего ключа), <b>инвалидация</b>, <b>холодный старт</b>, рассинхронизация между кэшем и БД</li></ul></div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">14.1 Кэши, очереди, фоновые задачи, надёжность</div>
+<div class="box"><h3>Очереди и брокеры: RabbitMQ против Kafka (вопрос в 17% интервью):</h3><div class="tbl"><table><thead><tr><th></th><th>RabbitMQ</th><th>Kafka</th></tr></thead><tbody><tr><td>модель</td><td>брокер очередей: сообщение доставляется потребителю и удаляется после подтверждения</td><td>распределённый журнал: сообщения хранятся заданное время, потребители читают со своего смещения (offset)</td></tr><tr><td>маршрутизация</td><td>богатая: exchanges (direct, topic, fanout), routing keys</td><td>топики и партиции, ключ определяет партицию</td></tr><tr><td>порядок</td><td>в рамках очереди</td><td>в рамках партиции</td></tr><tr><td>повторное чтение</td><td>нет (сообщение удалено)</td><td>да: можно перечитать с любого offset</td></tr><tr><td>масштаб</td><td>тысячи–десятки тысяч сообщений в секунду</td><td>сотни тысяч–миллионы, горизонтально по партициям</td></tr><tr><td>для чего</td><td>задачи, команды, RPC, сложная маршрутизация (Celery)</td><td>поток событий, event sourcing, аналитика, интеграция сервисов, CDC</td></tr></tbody></table></div></div>
+<div class="box"><h3>Гарантии доставки:</h3><ul><li><b>at-most-once</b> — может потеряться, но не придёт дважды (подтверждение до обработки)</li><li><b>at-least-once</b> — не потеряется, но может прийти <b>повторно</b> (подтверждение после обработки). Стандарт де-факто, поэтому потребитель обязан быть <b>идемпотентным</b>: дедупликация по id сообщения, <code>UPSERT</code>, условные обновления</li><li><b>exactly-once</b> — в общем случае недостижимо; на практике это at-least-once плюс идемпотентная обработка (Kafka даёт exactly-once в связке транзакций продюсера и консьюмера внутри Kafka)</li></ul></div>
+<div class="box"><h3>Transactional outbox:</h3><p>Проблема: нужно и записать заказ в БД, и отправить событие <code>OrderCreated</code> в брокер. Если сделать два шага, между ними может случиться сбой: заказ есть, события нет (или наоборот). Решение — в <b>той же транзакции</b> записать событие в таблицу <code>outbox</code>; отдельный процесс-релей читает неотправленные записи, публикует их в брокер и помечает отправленными. Доставка — at-least-once, поэтому потребители идемпотентны.</p></div>
+<div class="box quiz" id="q141-1" data-id="q141-1" data-kind="choice">
+<h3><span class="qkind">Выбери</span><span>Celery-задача списывает деньги и отправляет чек. Воркер упал после списания, задача выполнилась повторно. Что спасает от двойного списания?<span class="tag">· частый вопрос на собесе</span></span></h3>
+
+<div class="qopts" role="group">
+<label data-correct="0"><input type="radio" name="q141-1" id="q141-1-o0"><span><code>acks_late=False</code> — подтверждать задачу сразу при получении</span></label>
+<label data-correct="1"><input type="radio" name="q141-1" id="q141-1-o1"><span>идемпотентная задача: уникальный id операции, проверка «уже выполнено» и списание в одной транзакции с записью этого id (или условный UPDATE/уникальное ограничение)</span></label>
+<label data-correct="0"><input type="radio" name="q141-1" id="q141-1-o2"><span>увеличить число ретраев</span></label>
+<label data-correct="0"><input type="radio" name="q141-1" id="q141-1-o3"><span>запускать задачу синхронно</span></label>
+</div>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Почему</b><p>С <code>acks_late=True</code> задача подтверждается после выполнения, поэтому при падении воркера она придёт снова — это at-least-once. Без <code>acks_late</code> задача может просто потеряться. Значит, повтор нужно сделать безопасным. Сюда же: <code>transaction.on_commit</code>, чтобы задача стартовала только после коммита, таймауты на внешние вызовы и <code>retry</code> с экспоненциальной задержкой.</p></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">14.1 Кэши, очереди, фоновые задачи, надёжность</div>
+<div class="box"><h3>Надёжность при вызовах других сервисов:</h3><ul><li><b>таймауты</b> на всё: подключение, чтение, общий дедлайн запроса. Без таймаута зависший сервис забирает все воркеры</li><li><b>ретраи</b> — только для идемпотентных операций и временных ошибок (таймаут, 503, обрыв), с <b>экспоненциальной задержкой и джиттером</b>: <code>delay = random(0, min(cap, base · 2^attempt))</code>. Без джиттера все клиенты повторяют синхронно и добивают сервис («thundering herd»)</li><li><b>circuit breaker</b> — после серии ошибок перестаём звать сервис на время, отвечаем запасным вариантом, затем пробуем пропустить один запрос (half-open)</li><li><b>rate limiting</b> и <b>bulkhead</b> — ограничить нагрузку и изолировать пулы ресурсов</li><li><b>graceful degradation</b>: кэш, значение по умолчанию, отключение функции</li></ul></div>
+<div class="box quiz" id="q141-2" data-id="q141-2" data-kind="output" data-answer="[0.1, 0.2, 0.4, 0.8, 1.6, 2.0, 2.0]">
+<h3><span class="qkind">Что выведет?</span><span>Что выведет программа?</span></h3>
+<pre><code><span class="k">def</span> backoff(attempt, base=<span class="n">0.1</span>, cap=<span class="n">2.0</span>):
+    <span class="k">return</span> min(cap, base * <span class="n">2</span> ** attempt)
+
+print([backoff(a) <span class="k">for</span> a <span class="k">in</span> range(<span class="n">7</span>)])</code></pre>
+<textarea id="in-q141-2" rows="3" spellcheck="false" placeholder="Напиши, что напечатает программа, строка в строку. Если упадёт — последней строкой имя исключения" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Вывод</b><pre><code>[0.1, 0.2, 0.4, 0.8, 1.6, 2.0, 2.0]</code></pre><p>Экспонента быстро растёт, поэтому её ограничивают сверху (<code>cap</code>). В реальном коде к этому добавляют случайность: «full jitter» — <code>random.uniform(0, backoff(a))</code>. Так повторы разных клиентов разносятся во времени.</p></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">14.1 Кэши, очереди, фоновые задачи, надёжность</div>
+<div class="box hw" data-lesson="141"><h3>Домашка 14.1 <span class="count"></span></h3>
+<div class="task" data-test="test_token_bucket"><label><input type="checkbox" id="t141-1"><span><code>TokenBucket</code> — ограничитель скорости «ведро токенов»: <code>rate</code> токенов в секунду, ёмкость <code>capacity</code></span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Храни <code>tokens</code> и <code>last</code>. В <code>allow(cost=1)</code>: досыпь <code>(now - last) * rate</code>, но не выше <code>capacity</code>, обнови <code>last</code>; если токенов не меньше <code>cost</code> — вычти и верни <code>True</code>, иначе <code>False</code>.</p><p><b>Подвох.</b> Ведро стартует полным. Не храни отметку каждого запроса — только два числа, O(1) памяти. Часы — параметром.</p></details></div>
+<div class="task" data-test="test_backoff_delays"><label><input type="checkbox" id="t141-2"><span><code>backoff_delays</code> — последовательность задержек с экспонентой, потолком и полным джиттером</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Для попытки <code>i</code> от 0: <code>cap_i = min(cap, base * factor ** i)</code>; с джиттером — <code>rand() * cap_i</code>, без — <code>cap_i</code>. <code>rand</code> передаётся параметром.</p><p><b>Подвох.</b> Тест подаёт свой <code>rand</code> и проверяет точные значения. При <code>jitter=False</code> — чистая экспонента с потолком.</p></details></div>
+<div class="task" data-test="test_idempotent_consumer"><label><input type="checkbox" id="t141-3"><span><code>IdempotentConsumer</code> — обработчик сообщений, где повторная доставка не приводит к повторной обработке</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>handle(msg)</code> смотрит <code>msg[&quot;id&quot;]</code>: если id уже в <code>processed</code> — вернуть <code>&quot;duplicate&quot;</code>. Иначе вызвать <code>handler(msg)</code>; если он успешен — запомнить id и вернуть <code>&quot;ok&quot;</code>; если упал — <b>не</b> запоминать и пробросить исключение (брокер доставит ещё раз).</p><p><b>Подвох.</b> Хранилище обработанных id ограничено: храни не больше <code>max_ids</code> последних (<code>OrderedDict</code> или <code>deque</code> + множество) — иначе память растёт бесконечно.</p></details></div>
+<div class="task" data-test="test_outbox"><label><input type="checkbox" id="t141-4"><span><code>OutboxService</code> — заказ и событие в одной транзакции SQLite, релей публикует неотправленные события</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>create_order(user_id, total)</code>: в <code>with conn:</code> вставь заказ и строку в <code>outbox(event, payload, sent=0)</code>. <code>relay(publish)</code>: выбери неотправленные по <code>id</code>, для каждой вызови <code>publish(event, payload_dict)</code>; успех — <code>sent = 1</code>; ошибка — остановись (порядок важен), остальные отправятся в следующий раз.</p><p><b>Подвох.</b> Если вставка заказа упала, события быть не должно (и наоборот) — проверяется. Повторный <code>relay</code> не отправляет уже отправленное.</p></details></div>
+<div class="task" data-test="test_hash_ring"><label><input type="checkbox" id="t141-5"><span><code>HashRing ★</code> — консистентное хеширование с виртуальными узлами: ключ → узел; при добавлении узла переезжает малая доля ключей</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Для каждого узла положи <code>vnodes</code> точек <code>hash(f&quot;{node}#{i}&quot;)</code> в отсортированный список. Узел ключа — первая точка по часовой стрелке: <code>bisect</code> по <code>hash(key)</code>, при выходе за конец — точка 0. Хеш — стабильный: <code>int(hashlib.md5(s.encode()).hexdigest()[:16], 16)</code>, а не встроенный <code>hash()</code>.</p><p><b>Подвох.</b> Встроенный <code>hash()</code> для строк рандомизирован между запусками — кольцо будет разным на каждом сервере. Тест проверяет, что при добавлении пятого узла к четырём переехало ~20% ключей (не больше 30%), а при простом <code>hash % n</code> переехали бы ~80%.</p></details></div>
+<div class="run"><code>python3 pycourse/check.py 141</code><button type="button" class="copy">Копировать</button></div></div>
+<div class="box"><h3>Вопросы с собеседования по уроку:</h3></div>
+<div class="box quiz" id="q141-3" data-id="q141-3" data-kind="open">
+<h3><span class="qkind">Вопрос с собеса</span><span>RabbitMQ или Kafka — что выбрать? Как обеспечить, чтобы сообщения не терялись и не обрабатывались дважды?</span></h3>
+
+<textarea id="in-q141-3" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>RabbitMQ — классический брокер очередей: гибкая маршрутизация (exchanges), подтверждения потребителем, сообщение удаляется после обработки, удобен для задач и команд (Celery), RPC, приоритетов и отложенной доставки. Kafka — распределённый журнал: события хранятся заданное время, потребители читают с собственного offset и могут перечитывать, порядок гарантирован в партиции (ключ партиционирования — например, id заказа), огромная пропускная способность, горизонтальное масштабирование, хорош для потоков событий между сервисами, аналитики и CDC. Чтобы не терять: на стороне продюсера — подтверждения записи (publisher confirms, <code>acks=all</code> в Kafka), устойчивые очереди и репликация; запись события вместе с данными через transactional outbox; у потребителя — подтверждение (ack/commit offset) только после успешной обработки. Это даёт at-least-once, поэтому против дублей — идемпотентный потребитель: дедупликация по id сообщения в той же транзакции, что и эффект, upsert-ы и условные обновления. Сообщения, которые постоянно падают, — в DLQ после N попыток, с алертом.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q141-3-p0"><span>RabbitMQ: очереди, маршрутизация, задачи</span></label><label><input type="checkbox" id="q141-3-p1"><span>Kafka: журнал, offset, партиции, перечитывание, масштаб</span></label><label><input type="checkbox" id="q141-3-p2"><span>не терять: подтверждения продюсера, outbox, ack после обработки</span></label><label><input type="checkbox" id="q141-3-p3"><span>at-least-once → идемпотентный потребитель</span></label><label><input type="checkbox" id="q141-3-p4"><span>DLQ и мониторинг</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+<div class="box quiz" id="q141-4" data-id="q141-4" data-kind="open">
+<h3><span class="qkind">Вопрос с собеса</span><span>Как сделать вызов внешнего сервиса надёжным?</span></h3>
+
+<textarea id="in-q141-4" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>Таймауты на подключение и чтение плюс общий дедлайн запроса — обязательно. Ретраи — только для временных ошибок (таймауты, 502/503/504, обрыв соединения) и только для идемпотентных операций (или с ключом идемпотентности), с экспоненциальной задержкой, потолком и джиттером, с ограничением числа попыток и общего времени (бюджет ретраев, чтобы не умножать нагрузку). Circuit breaker: после доли ошибок выше порога размыкаемся, сразу отдаём ошибку или запасной ответ, через время пропускаем пробный запрос. Bulkhead — отдельный пул соединений или семафор на зависимость, чтобы медленный сервис не съел все ресурсы. Graceful degradation — кэш, устаревшие данные, отключение второстепенной функции. Асинхронность там, где ответ не нужен сразу: очередь вместо синхронного вызова. Наблюдаемость: метрики задержек и ошибок по зависимости, трассировка, алерты. В Python — <code>httpx</code> с <code>Timeout</code>, <code>tenacity</code> для ретраев, <code>aiobreaker</code>/<code>pybreaker</code>.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q141-4-p0"><span>таймауты и дедлайн</span></label><label><input type="checkbox" id="q141-4-p1"><span>ретраи: временные ошибки, идемпотентность, backoff + jitter, лимит</span></label><label><input type="checkbox" id="q141-4-p2"><span>circuit breaker</span></label><label><input type="checkbox" id="q141-4-p3"><span>bulkhead, rate limit</span></label><label><input type="checkbox" id="q141-4-p4"><span>деградация и асинхронность через очередь</span></label><label><input type="checkbox" id="q141-4-p5"><span>метрики и трассировка</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<section class="sheet" id="l142"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">14.2 System design и поведенческое интервью</div>
+<div class="box"><h3>Секция system design:</h3><p>С уровня middle — 45–60 минут: «спроектируй сокращатель ссылок / ленту / чат / трекинг курьеров». Правильного ответа нет, оценивают ход мысли: вопросы, оценки нагрузки, узкие места, компромиссы. По статистике system design занимает уже больше четверти времени технических интервью, а на позициях лида встречается в 78% случаев.</p></div>
+<div class="box"><h3>План (держись его и проговаривай этапы):</h3><ol><li><b>Требования</b> (5 мин): функциональные (что делаем и что <b>не</b> делаем) и нефункциональные (пользователи, RPS чтения и записи, задержка, доступность, согласованность, объём, география)</li><li><b>Оценки</b> (5 мин): RPS, объём хранения на годы, трафик. Цель — порядок величин: хватит одной базы или нужен шардинг?</li><li><b>API</b> (5 мин): основные эндпоинты</li><li><b>Модель данных и хранилища</b> (5 мин): сущности, ключи, какая база и почему</li><li><b>Общая схема</b> (10 мин): клиенты → CDN → балансировщик → stateless-сервисы → кэш, БД, очереди, объектное хранилище</li><li><b>Углубление</b> (15 мин): узкие места, масштабирование, отказы, согласованность — обычно интервьюер сам скажет, куда копать</li><li><b>Компромиссы</b>: что выбрали, от чего отказались и почему</li></ol></div>
+<div class="box"><h3>Цифры, которые надо помнить:</h3><div class="tbl"><table><thead><tr><th>Величина</th><th>Порядок</th></tr></thead><tbody><tr><td>секунд в сутках</td><td>86 400 ≈ 10⁵</td></tr><tr><td>1 млн запросов в сутки</td><td>≈ 12 RPS (пик ×2–5)</td></tr><tr><td>обращение к памяти / Redis / запрос в PostgreSQL по индексу</td><td>100 нс / ~1 мс / 1–5 мс</td></tr><tr><td>запрос между континентами</td><td>100–150 мс</td></tr><tr><td>Python-воркер на простом эндпоинте</td><td>сотни–пара тысяч RPS (асинхронный — больше)</td></tr><tr><td>PostgreSQL на хорошем железе</td><td>десятки тысяч простых запросов в секунду; запись — узкое место</td></tr></tbody></table></div></div>
+<div class="box quiz" id="q142-1" data-id="q142-1" data-kind="choice">
+<h3><span class="qkind">Выбери</span><span>Сервис: 5 млн активных пользователей в день, каждый в среднем делает 20 запросов на чтение. Пик — ×4 от среднего. Какой порядок пикового RPS?<span class="tag">· частый вопрос на собесе</span></span></h3>
+
+<div class="qopts" role="group">
+<label data-correct="0"><input type="radio" name="q142-1" id="q142-1-o0"><span>~100</span></label>
+<label data-correct="0"><input type="radio" name="q142-1" id="q142-1-o1"><span>~1 000</span></label>
+<label data-correct="1"><input type="radio" name="q142-1" id="q142-1-o2"><span>~5 000</span></label>
+<label data-correct="0"><input type="radio" name="q142-1" id="q142-1-o3"><span>~500 000</span></label>
+</div>
+<div class="qbar"><button type="button" class="qcheck primary">Проверить</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Почему</b><p>5·10⁶ × 20 = 10⁸ запросов в сутки; делим на 10⁵ секунд — 1 000 RPS в среднем, в пике ×4 — около 4–5 тысяч. Это несколько инстансов сервиса, реплики БД для чтения и кэш — без экзотики. Важен не точный ответ, а то, что ты считаешь вслух и делаешь вывод о масштабе.</p></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">14.2 System design и поведенческое интервью</div>
+<div class="box"><h3>Кубики, из которых собирают системы:</h3><div class="tbl"><table><thead><tr><th>Кубик</th><th>Зачем</th></tr></thead><tbody><tr><td>CDN</td><td>статика и медиа ближе к пользователю</td></tr><tr><td>балансировщик L4/L7, API-шлюз</td><td>распределить запросы, TLS, аутентификация, rate limit</td></tr><tr><td>stateless-сервисы</td><td>масштабируются копированием; состояние — во внешних хранилищах</td></tr><tr><td>кэш (Redis)</td><td>горячие чтения, сессии, счётчики</td></tr><tr><td>реляционная БД + реплики</td><td>источник истины, транзакции; реплики для чтения</td></tr><tr><td>шардинг</td><td>когда не влезает запись или объём: по ключу (user_id), консистентное хеширование</td></tr><tr><td>очередь / журнал (RabbitMQ, Kafka)</td><td>асинхронность, сглаживание пиков, развязка сервисов</td></tr><tr><td>объектное хранилище (S3)</td><td>файлы, фото, бэкапы</td></tr><tr><td>поисковый движок (Elasticsearch/OpenSearch)</td><td>полнотекстовый поиск, фильтры</td></tr><tr><td>генерация ID</td><td>Snowflake, UUIDv7 — уникально без центрального узла и растёт со временем</td></tr></tbody></table></div>
+<p><b>CAP</b>: при сетевом разделении приходится выбирать между согласованностью и доступностью. На практике говорят о выборе для конкретных данных: деньги и остатки — строгая согласованность, лента и счётчики лайков — eventual consistency.</p></div>
+<div class="box quiz" id="q142-2" data-id="q142-2" data-kind="design">
+<h3><span class="qkind">Спроектируй</span><span>Спроектируй сокращатель ссылок для SMS-рассылок: ссылки с метками делают SMS длиннее 70 символов, это дорого. 50 млн новых ссылок в месяц, переходов в 20 раз больше. (Задача с собеседований на Python-бэкенд.)<span class="tag">· частый вопрос на собесе</span></span></h3>
+
+<textarea id="in-q142-2" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p><b>Требования.</b> Создать короткую ссылку для длинного URL (API для сервиса рассылок), редирект по короткой ссылке, срок жизни (рассылки живут недолго — например, 90 дней), статистика переходов. Не делаем: пользовательские алиасы, личный кабинет. Нефункциональные: редирект быстрый (&lt; 50 мс), высокая доступность редиректа (ссылка уже ушла в SMS), запись может быть медленнее.</p>
+<p><b>Оценки.</b> 5·10⁷ / (30·10⁵) ≈ 20 записей в секунду; чтений ≈ 400 RPS, в пике ×5 — 2 000. Хранение: ~300 байт × 5·10⁷ × 3 месяца ≈ 45 ГБ живых данных — одна база справится. Длина кода: 62⁶ ≈ 5.7·10¹⁰ — 6 символов base62 хватит с запасом, а короткий домен (<code>sms.ru/aB3x9Z</code>) экономит символы.</p>
+<p><b>Генерация кода.</b> Уникальный id (последовательность БД, выдаваемая пачками, или Snowflake) → base62. Случайный код — с проверкой уникальности при вставке (UNIQUE и повтор). Хеш URL — коллизии и одинаковые ссылки для разных рассылок, не надо.</p>
+<p><b>Хранилище.</b> PostgreSQL: <code>codes(code PK, url, campaign_id, expires_at)</code>; партиционирование по времени — старые партиции удаляются целиком. Альтернатива — key-value (Redis с персистентностью, DynamoDB/Cassandra) при росте.</p>
+<p><b>Чтение.</b> Сервис редиректа stateless, несколько экземпляров за балансировщиком; Redis-кэш горячих кодов (рассылка → всплеск переходов по одним и тем же ссылкам сразу после отправки). Ответ 302 (не 301), чтобы браузер не кэшировал навсегда и переходы считались.</p>
+<p><b>Статистика.</b> Асинхронно: событие перехода в Kafka/RabbitMQ → ClickHouse; редирект не ждёт записи.</p>
+<p><b>Отдельно.</b> Отдельный ли это сервис или модуль монолита (обосновать: разный профиль нагрузки и требования к доступности — за отдельный сервис), rate limit и авторизация на создание, проверка URL на вредоносность, мониторинг доли 404 и задержки редиректа, деплой и резервирование.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q142-2-p0"><span>требования и что вне рамок, срок жизни</span></label><label><input type="checkbox" id="q142-2-p1"><span>оценки RPS и объёма, длина кода</span></label><label><input type="checkbox" id="q142-2-p2"><span>генерация кода без коллизий (id → base62)</span></label><label><input type="checkbox" id="q142-2-p3"><span>хранилище и удаление старого (партиции, TTL)</span></label><label><input type="checkbox" id="q142-2-p4"><span>кэш для всплесков, 302 против 301</span></label><label><input type="checkbox" id="q142-2-p5"><span>статистика асинхронно, отдельный сервис или нет</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">14.2 System design и поведенческое интервью</div>
+<div class="box quiz" id="q142-3" data-id="q142-3" data-kind="design">
+<h3><span class="qkind">Спроектируй</span><span>Нужно сделать быстрый сервис поверх двух медленных: «профиль пользователя» (300 мс) и «рекомендации» (1 с). Менять эти сервисы нельзя — ни новых событий, ни новых контрактов. Как? (Задача из собеседования на позицию лида.)<span class="tag">· частый вопрос на собесе</span></span></h3>
+
+<textarea id="in-q142-3" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>Раз нельзя изменить источники, остаются два рычага: <b>кэшировать</b> и <b>считать заранее</b>.</p>
+<ul><li><b>Параллельные запросы</b> к обоим сервисам (<code>asyncio.gather</code> с таймаутами): задержка = максимум, а не сумма</li><li><b>Кэш</b> ответов с TTL по допустимой свежести: профиль меняется редко — минуты и часы, рекомендации — десятки минут. Stale-while-revalidate: отдаём устаревшее и обновляем в фоне. Singleflight против stampede</li><li><b>Предподсчёт</b>: фоновые воркеры заранее прогревают кэш для активных пользователей (по логам посещений), например ночью или при входе пользователя (первый запрос запускает загрузку того, что понадобится дальше)</li><li><b>Деградация</b>: если рекомендации не успели к дедлайну (например, 200 мс), отдаём профиль и популярные рекомендации или пустой блок, а клиент дозагрузит их позже (отдельный эндпоинт)</li><li><b>Защита источников</b>: ограничение параллельных запросов к ним (они медленные — значит, и маломощные), circuit breaker, ретраи только с джиттером</li><li><b>Хранилище кэша</b>: Redis (общий для всех экземпляров) плюс небольшой локальный LRU</li><li>Метрики: hit rate, доля деградированных ответов, p95/p99, нагрузка на источники</li></ul>
+<p>Обсудить компромисс свежести и скорости с бизнесом: насколько старые рекомендации допустимы.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q142-3-p0"><span>параллельные вызовы с таймаутами</span></label><label><input type="checkbox" id="q142-3-p1"><span>кэш с TTL и stale-while-revalidate, singleflight</span></label><label><input type="checkbox" id="q142-3-p2"><span>предподсчёт и прогрев</span></label><label><input type="checkbox" id="q142-3-p3"><span>деградация по дедлайну</span></label><label><input type="checkbox" id="q142-3-p4"><span>защита медленных источников: лимит, circuit breaker</span></label><label><input type="checkbox" id="q142-3-p5"><span>метрики и согласование свежести</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+<div class="box"><h3>Ещё задачи для тренировки (из реальных собесов):</h3><ul><li>трекинг курьеров на карте: частые обновления координат, геоиндекс, WebSocket для клиента (Т-Банк)</li><li>Instagram: хранение медиа отдельно от метаданных, лента, расчёт скорости записи на диск в цифрах (Ozon)</li><li>распределённый rate limiter на 50 инстансов; сервис уведомлений с дедупликацией; чат; очередь отложенных задач</li></ul></div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">14.2 System design и поведенческое интервью</div>
+<div class="box"><h3>Поведенческое интервью:</h3><p>Отвечай по схеме <b>STAR</b>: Situation (контекст), Task (твоя задача), Action (что сделал <b>ты</b>, а не «мы»), Result (измеримый итог и выводы). Подготовь 4–5 историй, которые можно поворачивать под разные вопросы:</p>
+<ol><li>самая сложная техническая задача</li><li>конфликт или несогласие с коллегой или руководителем</li><li>ошибка или провал и что ты из этого вынес</li><li>ситуация, когда пришлось быстро разбираться в незнакомом</li><li>инициатива: что улучшил без просьбы</li></ol></div>
+<div class="box quiz" id="q142-4" data-id="q142-4" data-kind="open">
+<h3><span class="qkind">Вопрос с собеса</span><span>Расскажи о случае, когда ты ошибся в продакшене. Что произошло и что ты сделал? (Ответь по STAR на своём примере.)</span></h3>
+
+<textarea id="in-q142-4" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><p>Пример структуры (подставь свой опыт):</p>
+<p><b>Situation.</b> В сервисе приёма жалоб на FastAPI я выкатил миграцию, которая добавляла <code>NOT NULL</code>-столбец с дефолтом в таблицу на 8 млн строк.</p>
+<p><b>Task.</b> Изменение было нужно для новой функции, выкатка — в рабочее время.</p>
+<p><b>Action.</b> Миграция заблокировала таблицу, запросы начали копиться, сервис отвечал ошибками около 4 минут. Я откатил релиз, подтвердил в мониторинге, что очередь рассосалась, и написал в канал инцидентов, что произошло. Потом сделал миграцию в три шага: nullable-столбец без дефолта → заполнение батчами в фоне → ограничение <code>NOT NULL</code> через <code>NOT VALID</code> и валидацию. Провёл разбор инцидента без поиска виноватых и добавил в CI проверку миграций линтером (squawk) и правило выкатывать изменения схемы отдельно от кода.</p>
+<p><b>Result.</b> Повторно миграция прошла без простоя. За следующие полгода похожих инцидентов не было, а чек-лист миграций стал частью шаблона пулл-реквеста.</p>
+<p>Что оценивают: честность (без перекладывания вины), скорость реакции (сначала остановить ущерб, потом искать причину), системные выводы, а не «теперь я буду внимательнее».</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q142-4-p0"><span>конкретная ситуация с масштабом</span></label><label><input type="checkbox" id="q142-4-p1"><span>своя роль и честное признание ошибки</span></label><label><input type="checkbox" id="q142-4-p2"><span>действия: остановить ущерб, коммуникация, исправление</span></label><label><input type="checkbox" id="q142-4-p3"><span>системные выводы: процесс, проверки, автоматизация</span></label><label><input type="checkbox" id="q142-4-p4"><span>измеримый результат</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+<div class="box quiz" id="q142-5" data-id="q142-5" data-kind="open">
+<h3><span class="qkind">Подумай</span><span>Какие вопросы задать работодателю в конце собеседования?</span></h3>
+
+<textarea id="in-q142-5" class="prose" rows="5" placeholder="Ответь своими словами, как на собеседовании. Черновик сохраняется" aria-label="Твой ответ"></textarea>
+<div class="qbar"><button type="button" class="qcheck primary">Сравнить с эталоном</button><button type="button" class="qshow">Показать ответ</button><span class="qres"></span></div>
+<div class="qans" hidden><b>Эталонный ответ</b><ul><li>как выглядит первый месяц и когда ожидается самостоятельность — есть ли онбординг</li><li>как устроены код-ревью, тесты, CI/CD, как часто релизы — инженерная культура</li><li>стек и состояние кодовой базы, сколько легаси и техдолга, есть ли время на него</li><li>дежурства и разбор инцидентов — нагрузка, культура постмортемов</li><li>как растут разработчики: критерии грейдов, ревью, менторство</li><li>самая большая техническая проблема команды сейчас</li><li>почему открыта вакансия: рост или текучка</li></ul>
+<p>Вопросы показывают интерес и помогают выбрать тебе, а не только быть выбранным.</p><b>Отметь, что было в твоём ответе</b><div class="qpoints"><label><input type="checkbox" id="q142-5-p0"><span>онбординг и ожидания</span></label><label><input type="checkbox" id="q142-5-p1"><span>инженерная культура: ревью, тесты, релизы</span></label><label><input type="checkbox" id="q142-5-p2"><span>стек и техдолг</span></label><label><input type="checkbox" id="q142-5-p3"><span>дежурства и инциденты</span></label><label><input type="checkbox" id="q142-5-p4"><span>рост и грейды</span></label></div><div class="qbar"><button type="button" class="qcredit primary">Засчитать</button></div></div>
+</div>
+</div></section>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">14.2 System design и поведенческое интервью</div>
+<div class="box hw" data-lesson="142"><h3>Домашка 14.2 <span class="count"></span></h3>
+<div class="task" data-test="test_base62"><label><input type="checkbox" id="t142-1"><span><code>base62_encode</code> / <code>base62_decode</code> — короткие коды для ссылок</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Алфавит <code>0-9a-zA-Z</code>. Кодирование: пока <code>n &gt; 0</code> — <code>n, r = divmod(n, 62)</code>, символы с конца, затем развернуть; ноль — <code>&quot;0&quot;</code>. Декодирование: <code>n = n * 62 + ALPHABET.index(ch)</code> (или словарь «символ → цифра»).</p><p><b>Подвох.</b> Отрицательное число и неизвестный символ — <code>ValueError</code>. Пустая строка — тоже ошибка. Тест проверяет обратимость на случайных числах до 2⁶⁴.</p></details></div>
+<div class="task" data-test="test_snowflake"><label><input type="checkbox" id="t142-2"><span><code>Snowflake</code> — генератор 64-битных уникальных id, растущих во времени</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> <code>id = (ms - epoch) &lt;&lt; 22 | node &lt;&lt; 12 | seq</code>. В той же миллисекунде — <code>seq += 1</code>; дошли до 4096 — подожди следующую миллисекунду (крути <code>clock()</code>); новая миллисекунда — <code>seq = 0</code>. Всё под <code>threading.Lock</code>. Номер узла — от 0 до 1023, иначе <code>ValueError</code>.</p><p><b>Подвох.</b> Часы подменяются тестом. Если время пошло назад — <code>ClockMovedBackwards</code>: id не должны повторяться. id из 8 потоков одновременно — все уникальны.</p></details></div>
+<div class="task" data-test="test_url_shortener"><label><input type="checkbox" id="t142-3"><span><code>UrlShortener ★</code> — сервис коротких ссылок в памяти: создание, свои алиасы, срок жизни, счётчик переходов</span></label><details><summary>Как решать</summary><p><b>Как решать.</b> Счётчик id → <code>base62_encode</code>. <code>shorten(url, alias=None, ttl=None)</code>: проверь URL (<code>urlsplit</code>: схема <code>http</code>/<code>https</code> и непустой <code>netloc</code>), алиас — 3–32 символа из алфавита base62 и не занят. Храни <code>code → (url, expires_at, clicks)</code>. <code>resolve(code)</code> увеличивает счётчик и возвращает URL; несуществующий или истёкший — <code>KeyError</code>. <code>stats(code)</code> — число переходов.</p><p><b>Подвох.</b> Сгенерированный код не должен совпасть с чужим алиасом: если занят — бери следующий id. Время — из <code>clock()</code>. Истёкший код можно занять снова как алиас.</p></details></div>
+<div class="run"><code>python3 pycourse/check.py 142</code><button type="button" class="copy">Копировать</button></div></div>
+<div class="box"><h3>Как готовиться дальше — план и критерии:</h3><ol><li>Пройди тренажёры всех трёх частей; где ошибся — перечитай урок</li><li>Реши все домашки ★ без подсказок: это уровень лайвкода</li><li>Перед каждым собеседованием прогони <b>карточки «Вопросы с собеседований»</b> в конце каждой части: вслух, по таймеру, 2–3 минуты на вопрос</li><li>Алгоритмы: по паттернам части 2 добери задачи из NeetCode 150 или Grind 75, решая с таймером и без запуска</li><li>Проведи 2–3 пробных собеседования (с другом или с Claude в роли интервьюера) с разбором ошибок</li><li>После каждого настоящего собеседования записывай вопросы, которые застали врасплох, и добавляй в свою колоду</li></ol></div>
+<div class="box review-list"><h3>Готов к middle Python-бэкенду, если:</h3><ul><li>объясняешь модель данных Python, устройство dict и list, замыкания, декораторы, генераторы, дескрипторы и MRO без подсказок</li><li>пишешь декоратор с параметрами, контекстный менеджер и генератор за пару минут</li><li>понимаешь GIL, разницу потоков, процессов и asyncio, находишь блокирующие вызовы в асинхронном коде</li><li>решаешь задачу уровня LeetCode medium за 25 минут, называешь сложность и проверяешь код без запуска</li><li>пишешь SQL с JOIN, GROUP BY и оконными функциями, читаешь EXPLAIN, объясняешь индексы и уровни изоляции</li><li>знаешь HTTP и REST, идемпотентность, аутентификацию, устройство Django/FastAPI и проблему N+1</li><li>проектируешь сервис с кэшем, очередями, ретраями и идемпотентностью и обосновываешь компромиссы</li><li>рассказываешь 4–5 историй по STAR с цифрами и выводами</li></ul></div>
+</div></section>
+<div class="part" id="review"><b>Повторение</b><h2>Вопросы с собеседований</h2></div>
+<section class="sheet"><div class="sheet-cap"></div><div class="sheet-body">
+<div class="topic">Перед собеседованием пройдись по всем карточкам</div>
+<div class="box"><h3>Как пользоваться:</h3><p>Открой вопрос и ответь вслух, не подглядывая, будто ты на собеседовании. Зелёная рамка — вопрос уже засчитан в тренажёре.</p><div class="cards">
+<a href="#q111-1" data-id="q111-1"><small>11.1 · Выбери</small>Тебя просят посчитать p95 времени ответа по логу. Что верно?</a>
+<a href="#q111-2" data-id="q111-2"><small>11.1 · вопрос</small>Как бы ты сделал кэш для сервиса, который ходит в медленное внешнее API? Какие вопросы надо решить?</a>
+<a href="#q112-1" data-id="q112-1"><small>11.2 · Выбери</small>В <code>withdraw</code> банкомат посчитал, какие купюры выдать, но при выдаче второй кассеты случилась ошибка. Как должна быть устроена операция?</a>
+<a href="#q112-2" data-id="q112-2"><small>11.2 · Код-ревью</small>Сделай код-ревью сервиса бронирования переговорок:</a>
+<a href="#q113-1" data-id="q113-1"><small>11.3 · Код-ревью</small>Найди проблемы в Django-представлении:</a>
+<a href="#q113-2" data-id="q113-2"><small>11.3 · Код-ревью</small>Найди проблемы в асинхронном коде:</a>
+<a href="#q121-1" data-id="q121-1"><small>12.1 · Что выведет?</small>Что выведет программа?</a>
+<a href="#q121-2" data-id="q121-2"><small>12.1 · Что выведет?</small>Что выведет программа?</a>
+<a href="#q121-4" data-id="q121-4"><small>12.1 · Выбери</small>Чем <code>WHERE</code> отличается от <code>HAVING</code>?</a>
+<a href="#q121-5" data-id="q121-5"><small>12.1 · вопрос</small>Чем LEFT JOIN отличается от INNER JOIN? Что такое оконные функции и чем они отличаются от GROUP BY?</a>
+<a href="#q122-1" data-id="q122-1"><small>12.2 · Выбери</small>Есть индекс <code>(user_id, status, created_at)</code>. Какие запросы смогут эффективно его использовать? Отметь все.</a>
+<a href="#q122-2" data-id="q122-2"><small>12.2 · Выбери</small>Два запроса одновременно покупают последний товар: <code>SELECT stock …; if stock &gt; 0: UPDATE products SET stock = stock - 1</code>. На Read Committed что может произойти и как исправить?</a>
+<a href="#q122-3" data-id="q122-3"><small>12.2 · вопрос</small>Как работают индексы и когда они не помогают? Как бы ты ускорил медленный запрос?</a>
+<a href="#q122-4" data-id="q122-4"><small>12.2 · вопрос</small>Расскажи про уровни изоляции транзакций. Какие аномалии они предотвращают? Какой уровень по умолчанию в PostgreSQL?</a>
+<a href="#q131-1" data-id="q131-1"><small>13.1 · Выбери</small>Клиент отправил <code>POST /payments</code>, соединение оборвалось по таймауту, ответа нет. Клиент не знает, прошёл ли платёж. Как спроектировать API, чтобы повтор был безопасен?</a>
+<a href="#q131-2" data-id="q131-2"><small>13.1 · вопрос</small>Чем отличаются PUT, PATCH и POST? Что такое идемпотентность и зачем она бэкенду?</a>
+<a href="#q131-3" data-id="q131-3"><small>13.1 · вопрос</small>Сессии или JWT — что выбрать для аутентификации и почему?</a>
+<a href="#q132-1" data-id="q132-1"><small>13.2 · Что выведет?</small>Что выведет программа?</a>
+<a href="#q132-2" data-id="q132-2"><small>13.2 · Выбери</small>В Django-представлении <code>for order in Order.objects.all(): print(order.customer.name)</code>. Заказов 1000. Сколько запросов уйдёт в БД и как исправить?</a>
+<a href="#q132-3" data-id="q132-3"><small>13.2 · вопрос</small>Чем WSGI отличается от ASGI? Когда в FastAPI писать <code>async def</code>, а когда <code>def</code>?</a>
+<a href="#q132-4" data-id="q132-4"><small>13.2 · вопрос</small>Как в Django избежать проблемы N+1? Чем <code>select_related</code> отличается от <code>prefetch_related</code>?</a>
+<a href="#q141-1" data-id="q141-1"><small>14.1 · Выбери</small>Celery-задача списывает деньги и отправляет чек. Воркер упал после списания, задача выполнилась повторно. Что спасает от двойного списания?</a>
+<a href="#q141-3" data-id="q141-3"><small>14.1 · вопрос</small>RabbitMQ или Kafka — что выбрать? Как обеспечить, чтобы сообщения не терялись и не обрабатывались дважды?</a>
+<a href="#q141-4" data-id="q141-4"><small>14.1 · вопрос</small>Как сделать вызов внешнего сервиса надёжным?</a>
+<a href="#q142-1" data-id="q142-1"><small>14.2 · Выбери</small>Сервис: 5 млн активных пользователей в день, каждый в среднем делает 20 запросов на чтение. Пик — ×4 от среднего. Какой порядок пикового RPS?</a>
+<a href="#q142-2" data-id="q142-2"><small>14.2 · Спроектируй</small>Спроектируй сокращатель ссылок для SMS-рассылок: ссылки с метками делают SMS длиннее 70 символов, это дорого. 50 млн новых ссылок в месяц, переходов в 20 раз больше. (Задача с собеседований на Python-бэкенд.)</a>
+<a href="#q142-3" data-id="q142-3"><small>14.2 · Спроектируй</small>Нужно сделать быстрый сервис поверх двух медленных: «профиль пользователя» (300 мс) и «рекомендации» (1 с). Менять эти сервисы нельзя — ни новых событий, ни новых контрактов. Как? (Задача из собеседования на позицию лида.)</a>
+<a href="#q142-4" data-id="q142-4"><small>14.2 · вопрос</small>Расскажи о случае, когда ты ошибся в продакшене. Что произошло и что ты сделал? (Ответь по STAR на своём примере.)</a>
+</div></div></div></section>
+
+<footer>Отметки и ответы в тренажёрах хранятся только в этом браузере. Настоящий счёт по коду показывает <code>python3 pycourse/check.py</code>.</footer>
+</div>
+
+<script>
+// Прогресс, отметки домашек, тренажёры. Состояние хранится только в этом браузере.
+(function () {
+  var wrap = document.querySelector(".wrap");
+  var KEY = "py-course-p" + (wrap.dataset.part || "1");
+  var state = { tasks: {}, quiz: {}, drafts: {} };
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (saved) { state.tasks = saved.tasks || {}; state.quiz = saved.quiz || {}; state.drafts = saved.drafts || {}; }
+  } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  // ---------- ссылки на другие части: локально — через сервер, иначе — опубликованные страницы ----------
+  var local = /^https?:$/.test(location.protocol) && (location.hostname === "localhost" || location.hostname === "127.0.0.1");
+  document.querySelectorAll(".parts a").forEach(function (a) {
+    var href = local ? a.dataset.local : a.dataset.remote;
+    if (href) a.href = href; else if (!a.getAttribute("aria-current")) a.removeAttribute("href");
+  });
+
+  // ---------- прогресс ----------
+  var boxes = document.querySelectorAll(".hw input[type=checkbox]");
+  var quizzes = document.querySelectorAll(".quiz");
+  function render() {
+    var done = 0;
+    document.querySelectorAll(".hw").forEach(function (hw) {
+      var inputs = hw.querySelectorAll("input[type=checkbox]");
+      var n = 0;
+      inputs.forEach(function (i) { if (i.checked) n++; });
+      done += n;
+      var c = hw.querySelector(".count"); if (c) c.textContent = n + "/" + inputs.length;
+    });
+    var q = 0;
+    quizzes.forEach(function (z) { if (state.quiz[z.dataset.id] === "solved") q++; });
+    var prog = document.getElementById("prog");
+    if (prog) prog.textContent = "код " + done + "/" + boxes.length + " · тренажёры " + q + "/" + quizzes.length;
+    document.querySelectorAll(".cards a").forEach(function (a) {
+      a.classList.toggle("done", state.quiz[a.dataset.id] === "solved");
+    });
+  }
+  boxes.forEach(function (b) {
+    b.checked = !!state.tasks[b.id];
+    b.addEventListener("change", function () { state.tasks[b.id] = b.checked; save(); render(); });
+  });
+
+  // ---------- копирование команд ----------
+  document.querySelectorAll(".hw .run button.copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var code = btn.parentElement.querySelector("code");
+      function selectIt() {
+        var r = document.createRange(); r.selectNodeContents(code);
+        var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+        btn.textContent = "Выделено";
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code.textContent).then(function () { btn.textContent = "Скопировано"; }, selectIt);
+      } else { selectIt(); }
+      setTimeout(function () { btn.textContent = "Копировать"; }, 1600);
+    });
+  });
+
+  // ---------- тренажёры ----------
+  function norm(s) {
+    return s.replace(/\r/g, "").split("\n").map(function (l) { return l.trim().replace(/\s+/g, " "); })
+      .join("\n").replace(/^\n+|\n+$/g, "");
+  }
+  function setRes(z, cls, text) {
+    var r = z.querySelector(".qres");
+    r.className = "qres " + cls; r.textContent = text;
+  }
+  function reveal(z) { var a = z.querySelector(".qans"); if (a) a.hidden = false; }
+  function solved(z, silent) {
+    z.classList.add("solved");
+    if (!silent) { state.quiz[z.dataset.id] = "solved"; save(); render(); }
+    setRes(z, "ok", "✓ Верно");
+    reveal(z);
+  }
+
+  quizzes.forEach(function (z) {
+    var id = z.dataset.id, kind = z.dataset.kind;
+    var check = z.querySelector(".qcheck"), show = z.querySelector(".qshow");
+
+    if (kind === "output") {
+      var inp = z.querySelector("textarea");
+      var expected = z.dataset.answer;
+      if (state.drafts[id]) inp.value = state.drafts[id];
+      inp.addEventListener("input", function () { state.drafts[id] = inp.value; save(); });
+      check.addEventListener("click", function () {
+        if (!inp.value.trim()) { setRes(z, "no", "Сначала напиши свой ответ"); return; }
+        if (norm(inp.value) === norm(expected)) solved(z);
+        else setRes(z, "no", "Не совпало. Пройди по коду ещё раз строка за строкой");
+      });
+      inp.addEventListener("keydown", function (e) { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); check.click(); } });
+    }
+
+    if (kind === "choice" || kind === "bug") {
+      check.addEventListener("click", function () {
+        var labels = z.querySelectorAll(".qopts label");
+        var any = false, ok = true;
+        labels.forEach(function (l) {
+          var i = l.querySelector("input"), right = l.dataset.correct === "1";
+          l.classList.remove("right", "wrong");
+          if (i.checked) any = true;
+          if (i.checked !== right) ok = false;
+        });
+        if (!any) { setRes(z, "no", "Выбери вариант"); return; }
+        labels.forEach(function (l) {
+          var i = l.querySelector("input");
+          if (i.checked) l.classList.add(l.dataset.correct === "1" ? "right" : "wrong");
+        });
+        if (ok) solved(z); else setRes(z, "no", "Не совсем. Подумай ещё");
+      });
+    }
+
+    if (kind === "open" || kind === "design" || kind === "review") {
+      var ta = z.querySelector("textarea");
+      var credit = z.querySelector(".qcredit");
+      if (state.drafts[id]) ta.value = state.drafts[id];
+      ta.addEventListener("input", function () { state.drafts[id] = ta.value; save(); });
+      check.addEventListener("click", function () {
+        if (ta.value.trim().length < 20) { setRes(z, "no", "Сначала ответь своими словами — хотя бы пару предложений"); return; }
+        reveal(z); setRes(z, "peek", "Сравни свой ответ с эталоном и отметь, что упомянул");
+      });
+      if (credit) credit.addEventListener("click", function () {
+        var pts = z.querySelectorAll(".qpoints input"), n = 0;
+        pts.forEach(function (p) { if (p.checked) n++; });
+        if (pts.length && n < Math.ceil(pts.length * 0.7)) {
+          setRes(z, "no", "Отмечено " + n + " из " + pts.length + ". Дополни ответ и попробуй снова");
+          return;
+        }
+        solved(z);
+      });
+    }
+
+    if (show) show.addEventListener("click", function () {
+      reveal(z);
+      if (state.quiz[id] !== "solved") { state.quiz[id] = "shown"; save(); setRes(z, "peek", "Ответ подсмотрен — тренажёр не засчитан"); }
+    });
+
+    if (state.quiz[id] === "solved") solved(z, true);
+    else if (state.quiz[id] === "shown") { reveal(z); setRes(z, "peek", "Ответ подсмотрен — тренажёр не засчитан"); }
+  });
+
+  render();
+})();
+
+</script>
+<script>
+// Редактор домашек: работает, когда конспект открыт через локальный сервер
+// (python3 pycourse/lyceum.py → http://localhost:4002). Иначе показывает, как его включить.
+(function () {
+  var local = /^https?:$/.test(location.protocol) && (location.hostname === "localhost" || location.hostname === "127.0.0.1");
+  var serverReady = local ? fetch("/api/ping").then(function (r) { return r.ok; }, function () { return false; }) : Promise.resolve(false);
+  var dirty = {};
+
+  window.addEventListener("beforeunload", function (e) {
+    for (var k in dirty) if (dirty[k]) { e.preventDefault(); e.returnValue = ""; return; }
+  });
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function insert(ta, text) {
+    ta.focus();
+    if (!document.execCommand || !document.execCommand("insertText", false, text)) {
+      ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, "end");
+      ta.dispatchEvent(new Event("input"));
+    }
+  }
+
+  function keys(ta, onCheck, onSave) {
+    ta.addEventListener("keydown", function (e) {
+      var mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key === "Enter") { e.preventDefault(); onCheck(); return; }
+      if (mod && (e.key === "s" || e.key === "ы")) { e.preventDefault(); onSave(); return; }
+      if (e.key === "Tab" && !e.shiftKey && !mod) { e.preventDefault(); insert(ta, "    "); return; }
+      if (e.key === "Tab" && e.shiftKey && !mod) {
+        // убрать до 4 пробелов в начале текущей строки
+        e.preventDefault();
+        var v = ta.value, start = v.lastIndexOf("\n", ta.selectionStart - 1) + 1;
+        var n = (v.slice(start).match(/^ {1,4}/) || [""])[0].length;
+        if (n) {
+          var pos = ta.selectionStart;
+          ta.setSelectionRange(start, start + n);
+          insert(ta, "");
+          ta.selectionStart = ta.selectionEnd = Math.max(start, pos - n);
+        }
+        return;
+      }
+      if (e.key === "Enter" && !mod && !e.shiftKey) {
+        // сохраняем отступ текущей строки, после двоеточия добавляем ещё 4 пробела
+        var before = ta.value.slice(0, ta.selectionStart);
+        var line = before.slice(before.lastIndexOf("\n") + 1);
+        var indent = (line.match(/^[\t ]*/) || [""])[0];
+        if (/:\s*(#.*)?$/.test(line)) indent += "    ";
+        e.preventDefault();
+        insert(ta, "\n" + indent);
+      }
+    });
+  }
+
+  function hint(panel) {
+    var h = el("div", "hint");
+    var p1 = el("p", null, "Писать и проверять код прямо здесь можно, когда конспект открыт через локальную проверяющую систему. В корне репозитория запусти:");
+    var c = el("pre"); c.appendChild(el("code", null, "python3 pycourse/lyceum.py"));
+    var p2 = el("p", null, "и открой http://localhost:4002 — там у каждой домашки будет редактор и кнопка «Проверить». Код сохраняется в тот же tasks.py, так что можно переключаться между браузером и IDE.");
+    h.append(p1, c, p2);
+    panel.appendChild(h);
+  }
+
+  function render(hw, panel, res) {
+    var old = panel.querySelector(".build"); if (old) old.remove();
+    var status = panel.querySelector(".status");
+    hw.querySelectorAll(".task").forEach(function (t) {
+      t.classList.remove("ok", "bad");
+      var f = t.querySelector(".fails"); if (f) f.remove();
+      var v = t.querySelector(".verdict"); if (v) v.remove();
+    });
+    if (res.build_error) {
+      status.textContent = "💥 Тесты не запустились";
+      var b = el("pre", "build", res.build_error);
+      panel.appendChild(b);
+      return;
+    }
+    var byName = {}; res.tests.forEach(function (r) { byName[r.name] = r; });
+    var ok = 0, all = 0;
+    hw.querySelectorAll(".task").forEach(function (t) {
+      var r = byName[t.dataset.test];
+      if (!r) return;
+      all++;
+      var label = t.querySelector("label span");
+      var v = el("span", "verdict", r.pass ? "засчитано" : "не прошло");
+      label.appendChild(v);
+      if (r.pass) {
+        ok++;
+        t.classList.add("ok");
+        var box = t.querySelector("input");
+        if (!box.checked) { box.checked = true; box.dispatchEvent(new Event("change")); }
+      } else {
+        t.classList.add("bad");
+        if (r.output && r.output.length) {
+          var f = el("pre", "fails", r.output.join("\n"));
+          t.querySelector("label").after(f);
+        }
+      }
+    });
+    status.textContent = (ok === all ? "✅ " : "❌ ") + ok + "/" + all + " засчитано";
+  }
+
+  function editor(hw, panel) {
+    var lesson = hw.dataset.lesson;
+    var ta = el("textarea");
+    ta.id = "code-" + lesson;
+    ta.spellcheck = false;
+    ta.setAttribute("autocapitalize", "off");
+    ta.setAttribute("autocomplete", "off");
+    ta.setAttribute("aria-label", "Код урока " + lesson.slice(0, -1) + "." + lesson.slice(-1));
+    var bar = el("div", "bar");
+    var check = el("button", "primary", "Проверить");
+    check.type = "button";
+    var reload = el("button", null, "Загрузить с диска");
+    reload.type = "button";
+    var status = el("span", "status", "");
+    var keysHint = el("span", null, ""); keysHint.innerHTML = "<kbd>⌘/Ctrl+Enter</kbd> проверить · <kbd>⌘/Ctrl+S</kbd> сохранить";
+    keysHint.style.fontSize = "12px";
+    bar.append(check, reload, status);
+    panel.append(ta, bar, keysHint);
+
+    function load() {
+      status.textContent = "Загружаю…";
+      return fetch("/api/lessons/" + lesson + "/code").then(function (r) { return r.text(); }).then(function (code) {
+        ta.value = code; dirty[lesson] = false; status.textContent = "";
+      }, function () { status.textContent = "Не удалось загрузить файл"; });
+    }
+    function save() {
+      var pos = ta.selectionStart;
+      return fetch("/api/lessons/" + lesson + "/code", { method: "PUT", body: ta.value })
+        .then(function (r) { if (!r.ok) throw new Error(); return r.text(); })
+        .then(function (code) {
+          if (code !== ta.value) { ta.value = code; ta.selectionStart = ta.selectionEnd = Math.min(pos, code.length); }
+          dirty[lesson] = false;
+          status.textContent = "Сохранено";
+        });
+    }
+    function run() {
+      check.disabled = true;
+      status.textContent = "Проверяю…";
+      save().then(function () {
+        return fetch("/api/lessons/" + lesson + "/check", { method: "POST" }).then(function (r) { return r.json(); });
+      }).then(function (res) { render(hw, panel, res); }, function () {
+        status.textContent = "Сервер не ответил — он запущен?";
+      }).then(function () { check.disabled = false; });
+    }
+    ta.addEventListener("input", function () { dirty[lesson] = true; if (status.textContent === "Сохранено") status.textContent = ""; });
+    check.addEventListener("click", run);
+    reload.addEventListener("click", function () {
+      if (dirty[lesson] && !panel.querySelector(".confirm")) {
+        var c = el("button", "confirm", "Точно? Несохранённые правки пропадут");
+        c.type = "button";
+        c.addEventListener("click", function () { c.remove(); load(); });
+        bar.appendChild(c);
+        setTimeout(function () { c.remove(); }, 4000);
+        return;
+      }
+      load();
+    });
+    keys(ta, run, function () { save().catch(function () { status.textContent = "Не удалось сохранить"; }); });
+    load().then(function () { ta.focus(); });
+  }
+
+  document.querySelectorAll(".hw").forEach(function (hw) {
+    var run = hw.querySelector(".run");
+    var btn = el("button", "primary", "Решать здесь");
+    btn.type = "button";
+    run.prepend(btn);
+    var panel = null;
+    btn.addEventListener("click", function () {
+      if (panel) { panel.hidden = !panel.hidden; btn.textContent = panel.hidden ? "Решать здесь" : "Скрыть редактор"; return; }
+      panel = el("div", "ed");
+      hw.appendChild(panel);
+      btn.textContent = "Скрыть редактор";
+      serverReady.then(function (ok) { ok ? editor(hw, panel) : hint(panel); });
+    });
+  });
+})();
+
+</script>
